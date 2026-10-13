@@ -26,7 +26,7 @@ ${documentText.slice(0, 45000)}
 
 Bruk informasjonen i dokumentet over til å svare nøyaktig på spørsmål, henvise til gjeldende rutiner, og foreslå konkrete moduler, leksjoner og dilemmaer.` : 'Brukeren har ikke lastet opp et dokument ennå, men du gir veiledning basert på beste praksis for Himmelblå og gjeldende norsk lovverk.'}
 
-Vær hjelpsom, pedagogisk, tydelig og faglig sterk på norsk. Hvis brukeren ber deg foreslå eller justere kursoppsettet, presenter gjerne en ryddig disposisjon med forslag til moduler, caser og quizer. Minnn dem på at de kan klikke på "Bygg kurset" for å overføre oppsettet direkte til studioet.`;
+Vær hjelpsom, pedagogisk, tydelig og faglig sterk på norsk. Formater svarene dine ryddig med overskrifter (###), utheving (**fet skrift**) og punktlister, slik at teksten er innbydende og enkel å lese. Hvis brukeren ber deg foreslå eller justere kursoppsettet, presenter gjerne en ryddig disposisjon med forslag til moduler, caser og quizer. Minnn dem på at de når som helst kan klikke på «🚀 Bygg og overfør kurset til Studio» for å legge kurset rett inn i editoren!`;
 
     const openAiMessages = [
       { role: 'system', content: systemPrompt },

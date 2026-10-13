@@ -626,26 +626,26 @@
   <!-- MODAL: HIMMELBLÅ AI KURS-COPILOT & PDF-LESER                              -->
   <!-- ========================================================================= -->
   <div id="openAiModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.65); backdrop-filter: blur(6px); z-index: 110; align-items: center; justify-content: center; padding: 1.5rem;">
-    <div style="background: white; border-radius: 20px; max-width: 1040px; width: 100%; height: 86vh; max-height: 850px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; overflow: hidden;">
+    <div style="background: white; border-radius: 20px; max-width: 1060px; width: 100%; height: 88vh; max-height: 870px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; overflow: hidden;">
       
       <!-- Modal Header -->
       <div style="background: white; border-bottom: 1px solid #E2E8F0; padding: 1rem 1.75rem; display: flex; justify-content: space-between; align-items: center;">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #9333EA, #3B82F6); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(147, 51, 234, 0.3);">
+          <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #9333EA, #3B82F6); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 2px 8px rgba(147, 51, 234, 0.3);">
             ✨
           </div>
           <div>
             <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #1E293B;">
-              Himmelblå AI Kursdesigner & PDF-leser
+              Himmelblå AI Kursdesigner & PDF-Copilot
             </h3>
             <span style="font-size: 0.75rem; color: #64748B;">
-              Last opp PDF (prosedyrer/lovverk), still spørsmål, gi prompts og la AI skreddersy kurset for deg.
+              Last opp PDF (prosedyrer, lovverk, rutiner), still faglige spørsmål og la AI skreddersy kurset for deg.
             </span>
           </div>
         </div>
 
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <span id="aiActiveDocBadge" style="display: none; background: #DCFCE7; color: #15803D; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 20px;">
+          <span id="aiActiveDocBadge" style="display: none; background: #DCFCE7; color: #15803D; font-size: 0.75rem; font-weight: 700; padding: 0.3rem 0.75rem; border-radius: 20px;">
             📄 PDF aktiv
           </span>
           <button onclick="closeOpenAiModal()" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #94A3B8; font-weight: bold;">✕</button>
@@ -707,7 +707,7 @@
             </div>
 
             <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; padding: 0.75rem; font-size: 0.72rem; color: #1E40AF; line-height: 1.4;">
-              💡 <strong>Tips:</strong> Still AI-en spørsmål om innholdet i chatten for å utforske pensum, før du trykker «Bygg og overfør».
+              💡 <strong>Tips:</strong> Du kan laste opp PDF-er direkte i chatten via 📎 binders-knappen, eller stille spørsmål før du bygger.
             </div>
 
           </div>
@@ -719,15 +719,26 @@
         </div>
 
         <!-- Høyre kolonne: Interaktiv Samtale & Bygging (flex: 1) -->
-        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem; background: white;">
+        <div id="aiChatPanel" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 1.25rem 1.5rem; background: white; position: relative;">
           
+          <!-- Banner for aktiv PDF i toppen av chatten -->
+          <div id="chatActiveDocBanner" style="display: none; background: #F0FDF4; border: 1px solid #86EFAC; border-radius: 10px; padding: 0.5rem 0.85rem; margin-bottom: 0.6rem; align-items: center; justify-content: space-between; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #166534;">
+              <span style="font-size: 1.1rem;">📄</span>
+              <strong>Aktiv PDF:</strong>
+              <span id="chatActiveDocTitle" style="font-weight: 700;">prosedyre.pdf</span>
+              <span id="chatActiveDocDetails" style="font-size: 0.72rem; opacity: 0.85;">(0 sider)</span>
+            </div>
+            <button type="button" onclick="removeUploadedPdf()" style="background: none; border: none; color: #DC2626; font-size: 0.75rem; font-weight: 800; cursor: pointer;">✕ Fjern PDF</button>
+          </div>
+
           <!-- Meldingsliste -->
-          <div id="aiChatMessagesList" style="flex: 1; overflow-y: auto; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem; max-height: 480px;">
+          <div id="aiChatMessagesList" style="flex: 1; overflow-y: auto; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem; min-height: 250px; border-radius: 8px;">
             <!-- Fylles med samtale -->
           </div>
 
           <!-- Hurtig-prompts chips -->
-          <div style="padding-top: 0.75rem; border-top: 1px solid #F1F5F9; margin-top: 0.75rem;">
+          <div style="padding-top: 0.6rem; border-top: 1px solid #F1F5F9; margin-top: 0.6rem; flex-shrink: 0;">
             <div style="font-size: 0.72rem; font-weight: 800; color: #64748B; margin-bottom: 0.35rem;">Forslag til prompts:</div>
             <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
               <button type="button" onclick="sendQuickPrompt('Trekk ut de 3 viktigste rutinene fra PDF-en og forklar dem kort.')" style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 16px; padding: 0.25rem 0.65rem; font-size: 0.72rem; font-weight: 600; color: #334155; cursor: pointer;">💡 Trekk ut de 3 viktigste rutinene</button>
@@ -737,16 +748,51 @@
             </div>
           </div>
 
-          <!-- Skrivefelt -->
-          <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; align-items: center;">
-            <input id="aiChatInput" onkeydown="if(event.key==='Enter') sendAiChatMessage()" placeholder="Still et spørsmål til PDF-en eller skriv instrukser for kurset..." style="flex: 1; padding: 0.7rem 1rem; border-radius: 10px; border: 1px solid #CBD5E1; font-size: 0.88rem; outline: none;">
-            <button type="button" onclick="sendAiChatMessage()" style="padding: 0.7rem 1.25rem; background: #2563EB; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.35rem;">
-              <span>Send</span> ✈️
-            </button>
+          <!-- Skrivefelt / Chat Composer med Binders & Textarea -->
+          <div id="chatComposerBox" style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 14px; padding: 0.6rem 0.85rem; margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.45rem; box-shadow: 0 2px 6px rgba(0,0,0,0.03); flex-shrink: 0;">
+            
+            <!-- Vedlagt PDF-fil direkte over tekstfeltet -->
+            <div id="composerPdfBadge" style="display: none; align-items: center; justify-content: space-between; background: #DCFCE7; border: 1px solid #86EFAC; border-radius: 8px; padding: 0.35rem 0.75rem; font-size: 0.78rem; color: #166534; font-weight: 700;">
+              <div style="display: flex; align-items: center; gap: 0.4rem; overflow: hidden;">
+                <span>📎</span>
+                <span id="composerPdfName" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px;">fil.pdf</span>
+                <span id="composerPdfInfo" style="font-size: 0.72rem; opacity: 0.85;">(0 sider)</span>
+              </div>
+              <button type="button" onclick="removeUploadedPdf()" style="background: none; border: none; color: #DC2626; font-weight: bold; cursor: pointer; font-size: 0.85rem;" title="Fjern PDF">✕</button>
+            </div>
+
+            <!-- Auto-expanding Textarea for skriving med linjeskift -->
+            <textarea id="aiChatInput" rows="2" placeholder="Still et spørsmål til PDF-en, gi instrukser for kurset, eller skriv hva du ønsker... (Enter for å sende, Shift+Enter for linjeskift)" style="width: 100%; border: none; outline: none; background: transparent; font-size: 0.9rem; line-height: 1.5; resize: none; font-family: inherit; color: #1E293B; max-height: 140px;"></textarea>
+
+            <!-- Verktøylinje under skrivefeltet -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.4rem; border-top: 1px solid #E2E8F0;">
+              
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <!-- 📎 Last opp PDF direkte i chatten -->
+                <label id="btnChatUploadPdf" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.85rem; background: white; border: 1.5px solid #CBD5E1; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #1E293B; cursor: pointer; transition: all 0.2s;" title="Last opp PDF direkte i chatten">
+                  <span style="font-size: 1rem; color: #2563EB;">📎</span>
+                  <span>Last opp PDF i chat</span>
+                  <input type="file" id="chatPdfFileInput" accept="application/pdf" onchange="handlePdfUpload(event)" style="display: none;">
+                </label>
+
+                <span id="chatUploadSpinner" style="display: none; font-size: 0.75rem; color: #2563EB; font-weight: bold;">
+                  ⏳ Leser PDF...
+                </span>
+                
+                <span style="font-size: 0.7rem; color: #94A3B8;">
+                  Shift+Enter = linjeskift
+                </span>
+              </div>
+
+              <!-- Send-knapp -->
+              <button type="button" onclick="sendAiChatMessage()" id="btnSendAiChat" style="padding: 0.55rem 1.35rem; background: #2563EB; color: white; border: none; border-radius: 8px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+                <span>Send</span> ✈️
+              </button>
+            </div>
           </div>
 
           <!-- Bunnlinje: Bygg og overfør knapp -->
-          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+          <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
             <button type="button" onclick="closeOpenAiModal()" style="padding: 0.6rem 1.25rem; background: white; border: 1px solid #CBD5E1; border-radius: 8px; font-weight: 700; color: #475569; font-size: 0.85rem; cursor: pointer;">
               Avbryt
             </button>
@@ -760,6 +806,44 @@
 
       </div>
 
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: PDF DOKUMENTLESER                                                  -->
+  <!-- ========================================================================= -->
+  <div id="pdfViewerModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(6px); z-index: 150; align-items: center; justify-content: center; padding: 1.5rem;">
+    <div style="background: white; border-radius: 16px; width: 95%; max-width: 1100px; height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35);">
+      
+      <!-- Topplinje i PDF-leser -->
+      <div style="background: #1E293B; color: white; padding: 0.85rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold;">
+            📄
+          </div>
+          <div>
+            <h4 id="pdfViewerTitle" style="margin: 0; font-size: 1rem; font-weight: 800; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 600px;">
+              Dokumentvisning
+            </h4>
+            <span style="font-size: 0.72rem; color: #94A3B8;">Himmelblå Skolen • Fagprosedyre</span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <a id="pdfViewerDownloadBtn" href="#" download="dokument.pdf" target="_blank" style="text-decoration: none; background: #334155; color: white; padding: 0.45rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem; transition: background 0.2s;">
+            <span>⬇️</span> Last ned PDF
+          </a>
+          <button type="button" onclick="closePdfViewerModal()" style="background: #334155; border: none; color: white; width: 32px; height: 32px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Lukk">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Iframe som viser PDF-en -->
+      <div style="flex: 1; background: #475569; position: relative;">
+        <iframe id="pdfViewerFrame" src="about:blank" style="width: 100%; height: 100%; border: none;"></iframe>
+      </div>
     </div>
   </div>
 
@@ -1727,13 +1811,77 @@
 
       // 7. PDF BLOKK
       if (b.type === 'pdf') {
+        const hasPdf = !!b.content.url;
         return `
-          <div style="background:#FEF9C3; border:1px solid #FDE047; border-radius:10px; padding:1rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-              <span style="font-size:0.75rem; font-weight:800; color:#854D0E;">📄 PDF-DOKUMENT</span>
-              <button onclick="removeBuilderBlock(${bIdx})" style="background:none; border:none; color:#EF4444; font-weight:bold; cursor:pointer;">✕ Slett</button>
+          <div style="background:#FEF9C3; border:1px solid #FDE047; border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; gap:0.85rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.8rem; font-weight:800; color:#854D0E; display:flex; align-items:center; gap:0.35rem;">
+                📄 PDF-MODUL / FAGDOKUMENT
+              </span>
+              <button onclick="removeBuilderBlock(${bIdx})" style="background:none; border:none; color:#EF4444; font-weight:bold; cursor:pointer; font-size:0.85rem;">✕ Slett blokk</button>
             </div>
-            <input type="text" value="${b.content.url || ''}" oninput="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].blocks[${bIdx}].content.url = this.value" placeholder="Lenke til PDF eller prosedyre..." style="width:100%; padding:0.5rem; border-radius:6px; border:1px solid #CBD5E1; font-size:0.85rem;">
+
+            <!-- Dokumenttittel -->
+            <div>
+              <label style="display:block; font-size:0.75rem; font-weight:700; color:#854D0E; margin-bottom:0.25rem;">Tittel på dokument / prosedyre:</label>
+              <input type="text" value="${escapeHtml(b.content.title || '')}" oninput="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].blocks[${bIdx}].content.title = this.value" placeholder="F.eks. Rutine for legemiddelhåndtering eller Lovdata-utdrag..." style="width:100%; padding:0.55rem 0.75rem; border-radius:6px; border:1px solid #CBD5E1; font-size:0.88rem; font-weight:700;">
+            </div>
+
+            <!-- Instruksjon til ansatte -->
+            <div>
+              <label style="display:block; font-size:0.75rem; font-weight:700; color:#854D0E; margin-bottom:0.25rem;">Leseveiledning / Instruks til ansatt:</label>
+              <textarea rows="2" oninput="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].blocks[${bIdx}].content.instructions = this.value" placeholder="F.eks. Les kapittel 2 nøye før du løser casen nedenfor..." style="width:100%; padding:0.55rem 0.75rem; border-radius:6px; border:1px solid #CBD5E1; font-size:0.85rem; line-height:1.4;">${escapeHtml(b.content.instructions || '')}</textarea>
+            </div>
+
+            <!-- Opplastet PDF-kort eller opplastingsknapp -->
+            ${hasPdf ? `
+              <div style="background:white; border:1.5px solid #FACC15; border-radius:10px; padding:0.85rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:0.75rem;">
+                <div style="display:flex; align-items:center; gap:0.75rem; overflow:hidden;">
+                  <div style="width:40px; height:40px; border-radius:8px; background:#FEF3C7; color:#D97706; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0;">
+                    📄
+                  </div>
+                  <div style="overflow:hidden;">
+                    <div style="font-size:0.88rem; font-weight:800; color:#1E293B; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(b.content.fileName || b.content.title || 'PDF')}">
+                      ${escapeHtml(b.content.fileName || b.content.title || 'Dokument.pdf')}
+                    </div>
+                    <div style="font-size:0.72rem; color:#64748B; font-weight:600;">
+                      ${b.content.fileSize ? b.content.fileSize + ' • ' : ''}${b.content.pageCount ? b.content.pageCount + ' sider • ' : ''}Klar for ansatte ✅
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex; gap:0.4rem; flex-shrink:0;">
+                  <button type="button" onclick="previewPdfModal('${escapeQuote(b.content.url)}', '${escapeQuote(b.content.title || b.content.fileName || 'Dokument')}')" style="padding:0.4rem 0.75rem; background:#2563EB; color:white; border:none; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer;">
+                    👁️ Les PDF
+                  </button>
+                  <label style="padding:0.4rem 0.75rem; background:#F1F5F9; color:#334155; border:1px solid #CBD5E1; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center;">
+                    🔄 Bytt PDF
+                    <input type="file" accept="application/pdf" onchange="uploadBlockPdfFromMac(event, ${bIdx})" style="display:none;">
+                  </label>
+                  <button type="button" onclick="removeBlockPdf(${bIdx})" style="padding:0.4rem 0.6rem; background:#FEE2E2; color:#DC2626; border:none; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer;" title="Fjern PDF">
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ` : `
+              <div style="border:2px dashed #FACC15; background:#FEFCE8; border-radius:10px; padding:1.25rem 1rem; text-align:center;">
+                <div style="font-size:1.75rem; margin-bottom:0.25rem;">📑</div>
+                <div style="font-size:0.88rem; font-weight:800; color:#854D0E; margin-bottom:0.25rem;">
+                  Last opp PDF-prosedyre fra Mac
+                </div>
+                <div style="font-size:0.72rem; color:#A16207; margin-bottom:0.75rem;">
+                  Ansatte kan lese og laste ned dokumentet direkte i kurset.
+                </div>
+                <label style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.55rem 1.25rem; background:#EAB308; color:#78350F; font-weight:800; font-size:0.82rem; border-radius:8px; cursor:pointer; box-shadow:0 2px 6px rgba(234,179,8,0.25); transition:all 0.2s;">
+                  📁 Velg PDF fra Mac
+                  <input type="file" accept="application/pdf" onchange="uploadBlockPdfFromMac(event, ${bIdx})" style="display:none;">
+                </label>
+                <div style="margin-top:0.75rem; font-size:0.72rem; color:#A16207;">
+                  Eller lenke til ekstern PDF:
+                </div>
+                <input type="text" value="${escapeHtml(b.content.url || '')}" oninput="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].blocks[${bIdx}].content.url = this.value" placeholder="https://..." style="margin-top:0.25rem; width:80%; max-width:320px; padding:0.4rem 0.6rem; border-radius:6px; border:1px solid #CBD5E1; font-size:0.8rem;">
+              </div>
+            `}
           </div>
         `;
       }
@@ -1773,7 +1921,7 @@
       if (type === 'text') content = { text: '' };
       if (type === 'image') content = { url: '', caption: '' };
       if (type === 'video') content = { url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' };
-      if (type === 'pdf') content = { title: 'Prosedyre.pdf', url: '' };
+      if (type === 'pdf') content = { title: 'Fagprosedyre / Rutinedokument', instructions: 'Les gjennom dokumentet nøye.', url: '', fileName: '', fileSize: '', pageCount: 0 };
       if (type === 'chat') content = { script: 'Bruker: Hei, jeg trenger hjelp.\nAnsatt: Hei! Hvordan kan jeg støtte deg i dag?' };
       if (type === 'quiz') content = { question: 'Hva er riktig fremgangsmåte?', options: ['Alternativ A', 'Alternativ B', 'Alternativ C'], answer: 0 };
       if (type === 'flashcard') content = { front: 'Hva er de 5 R-er i legemiddelhåndtering?', back: 'Riktig pasient, legemiddel, dose, måte og tidspunkt.' };
@@ -1809,6 +1957,10 @@
       addBuilderBlock('image');
     }
 
+    function triggerBlockPdfUpload() {
+      addBuilderBlock('pdf');
+    }
+
     async function uploadBlockImageFromMac(e, bIdx) {
       const file = e.target.files[0];
       if (!file) return;
@@ -1823,22 +1975,107 @@
       }
     }
 
+    async function uploadBlockPdfFromMac(e, bIdx) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const mIdx = builderSelectedModuleIdx;
+      const lIdx = builderSelectedLessonIdx;
+      const block = currentEditingCourse.modules[mIdx].lessons[lIdx].blocks[bIdx];
+
+      const fileName = file.name;
+      const fileSize = file.size > 1024 * 1024 
+        ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' 
+        : (file.size / 1024).toFixed(0) + ' KB';
+
+      let pageCount = 0;
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          pageCount = pdf.numPages;
+        }
+      } catch (err) {
+        console.warn('Kunne ikke telle sider i PDF:', err);
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const dataUrl = evt.target.result;
+        block.content.url = dataUrl;
+        block.content.fileName = fileName;
+        block.content.fileSize = fileSize;
+        block.content.pageCount = pageCount;
+        if (!block.content.title || block.content.title === 'Fagprosedyre / Rutinedokument' || block.content.title === 'Prosedyre.pdf') {
+          block.content.title = fileName.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+        }
+        renderBuilderLessonWorkspace();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeBlockPdf(bIdx) {
+      const mIdx = builderSelectedModuleIdx;
+      const lIdx = builderSelectedLessonIdx;
+      const block = currentEditingCourse.modules[mIdx].lessons[lIdx].blocks[bIdx];
+      block.content.url = '';
+      block.content.fileName = '';
+      block.content.fileSize = '';
+      block.content.pageCount = 0;
+      renderBuilderLessonWorkspace();
+    }
+
+    function previewPdfModal(url, title) {
+      if (!url) {
+        alert('Ingen PDF-fil er tilknyttet dette dokumentet ennå.');
+        return;
+      }
+      const modal = document.getElementById('pdfViewerModal');
+      const frame = document.getElementById('pdfViewerFrame');
+      const titleEl = document.getElementById('pdfViewerTitle');
+      const dlBtn = document.getElementById('pdfViewerDownloadBtn');
+
+      if (titleEl) titleEl.innerText = title || 'Dokumentvisning';
+      if (dlBtn) {
+        dlBtn.href = url;
+        dlBtn.download = (title ? title.replace(/[^a-zA-Z0-9æøåÆØÅ\-_]/g, '_') : 'dokument') + '.pdf';
+      }
+      if (frame) frame.src = url;
+
+      modal.style.display = 'flex';
+    }
+
+    function closePdfViewerModal() {
+      const modal = document.getElementById('pdfViewerModal');
+      const frame = document.getElementById('pdfViewerFrame');
+      if (frame) frame.src = 'about:blank';
+      if (modal) modal.style.display = 'none';
+    }
+
+    function escapeQuote(str) {
+      if (!str) return '';
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
     // =========================================================================
     // AI KURS-COPILOT: PDF-LESER, INTERAKTIV CHAT & PROMPTING
     // =========================================================================
     let uploadedPdfText = '';
     let uploadedPdfName = '';
     let uploadedPdfPageCount = 0;
+    let uploadedPdfWordCount = 0;
+    let uploadedPdfDataUrl = '';
     let aiChatMessages = [
       {
         role: 'assistant',
-        content: 'Hei Mari! Jeg er din AI-kursdesigner for Himmelblå.\n\nDu kan laste opp et fagdrev eller en prosedyre-PDF til venstre. Du kan også stille meg spørsmål om innholdet, eller be meg lage spesifikke moduler, leksjoner og caser. Hva slags kurs skal vi lage i dag?'
+        content: `Hei Mari og Marius! 👋 Jeg er deres AI-kursdesigner for Himmelblå.\n\nHer kan du **laste opp PDF-er** (fagprosedyrer, rutiner, lovverk) direkte i chatten via **binders-knappen (📎)** nedenfor, eller dra filen rett inn i vinduet.\n\nDu kan:\n- **Stille meg spørsmål** om innholdet i dokumentet\n- Gi instrukser og ønsker for kursets oppbygning\n- Be meg lage **etiske dilemma-caser** eller **quizer**\n- Klikke på **«🚀 Bygg og overfør kurset»** når du er fornøyd, så legges hele kurset inn i Studioet!\n\nHva skal vi jobbe med i dag?`
       }
     ];
 
     function escapeHtml(str) {
       if (!str) return '';
-      return str
+      return String(str)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -1846,24 +2083,80 @@
         .replace(/'/g, '&#039;');
     }
 
+    function formatAiMarkdown(text) {
+      if (!text) return '';
+      let str = escapeHtml(text);
+
+      // Overskrifter
+      str = str.replace(/^### (.*$)/gim, '<h4 style="margin: 0.8rem 0 0.3rem; font-size: 1rem; font-weight: 800; color: #1E293B;">$1</h4>');
+      str = str.replace(/^## (.*$)/gim, '<h3 style="margin: 1rem 0 0.4rem; font-size: 1.1rem; font-weight: 800; color: #1E293B;">$1</h3>');
+      str = str.replace(/^# (.*$)/gim, '<h2 style="margin: 1.15rem 0 0.5rem; font-size: 1.25rem; font-weight: 900; color: #1E293B;">$1</h2>');
+
+      // Fet skrift & kursiv
+      str = str.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      str = str.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+      // Sitater / blokkvarsler
+      str = str.replace(/^> (.*$)/gim, '<blockquote style="margin: 0.5rem 0; padding: 0.4rem 0.85rem; border-left: 3px solid #3B82F6; background: #EFF6FF; border-radius: 4px; color: #1E40AF; font-size: 0.85rem;">$1</blockquote>');
+
+      // Punktlister og tallister
+      str = str.replace(/^\s*[\-\*]\s+(.*$)/gim, '<li style="margin-left: 1.25rem; list-style-type: disc; margin-bottom: 0.25rem;">$1</li>');
+      str = str.replace(/^\s*(\d+)\.\s+(.*$)/gim, '<li style="margin-left: 1.25rem; list-style-type: decimal; margin-bottom: 0.25rem;">$1</li>');
+
+      // Linjeskift
+      str = str.replace(/\n\n/g, '<br><br>');
+      str = str.replace(/\n/g, '<br>');
+
+      return str;
+    }
+
+    function copyAiMessage(idx) {
+      const msg = aiChatMessages[idx];
+      if (!msg) return;
+      navigator.clipboard.writeText(msg.content).then(() => {
+        alert('📋 Teksten ble kopiert til utklippstavlen!');
+      }).catch(() => {
+        alert('Kunne ikke kopiere teksten.');
+      });
+    }
+
     function openOpenAiModal() {
       document.getElementById('openAiModal').style.display = 'flex';
       renderAiChatMessages();
+      setupAiChatInputHandlers();
+      setupChatDragAndDrop();
+      updateChatPdfAttachmentDisplay();
+      setTimeout(() => {
+        const el = document.getElementById('aiChatInput');
+        if (el) el.focus();
+      }, 100);
     }
 
     function closeOpenAiModal() {
       document.getElementById('openAiModal').style.display = 'none';
     }
 
-    async function handlePdfUpload(e) {
-      const file = e.target.files[0];
+    async function handlePdfUpload(eOrFile) {
+      let file = null;
+      if (eOrFile instanceof File) {
+        file = eOrFile;
+      } else if (eOrFile && eOrFile.target && eOrFile.target.files) {
+        file = eOrFile.target.files[0];
+      }
+      if (!file) return;
+      await processPdfFile(file);
+    }
+
+    async function processPdfFile(file) {
       if (!file) return;
 
       const statusEl = document.getElementById('pdfUploadStatus');
-      const infoEl = document.getElementById('pdfFileInfo');
-      const dropZone = document.getElementById('pdfDropZone');
-      statusEl.style.display = 'block';
-      statusEl.innerText = '⏳ Leser og analyserer PDF-sider...';
+      const chatSpinner = document.getElementById('chatUploadSpinner');
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.innerText = '⏳ Leser og analyserer PDF-sider...';
+      }
+      if (chatSpinner) chatSpinner.style.display = 'inline-block';
 
       try {
         const arrayBuffer = await file.arrayBuffer();
@@ -1887,33 +2180,78 @@
         uploadedPdfPageCount = pdf.numPages;
 
         const words = fullText.split(/\s+/).filter(Boolean).length;
-        statusEl.style.display = 'none';
-        infoEl.style.display = 'flex';
-        dropZone.style.display = 'none';
-        document.getElementById('pdfFileNameLabel').innerText = file.name;
-        document.getElementById('pdfStatsLabel').innerText = `${pdf.numPages} sider • ${words.toLocaleString('no-NO')} ord lest av AI ✅`;
+        uploadedPdfWordCount = words;
+
+        // Lagre også som DataURL for mulig direkte innsetting i kurset
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          uploadedPdfDataUrl = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        if (statusEl) statusEl.style.display = 'none';
+        const infoEl = document.getElementById('pdfFileInfo');
+        const dropZone = document.getElementById('pdfDropZone');
+        if (infoEl) infoEl.style.display = 'flex';
+        if (dropZone) dropZone.style.display = 'none';
         
-        const badge = document.getElementById('aiActiveDocBadge');
-        if (badge) {
-          badge.style.display = 'inline-block';
-          badge.innerText = `📄 ${file.name} (${pdf.numPages} s)`;
-        }
+        const fileNameLabel = document.getElementById('pdfFileNameLabel');
+        if (fileNameLabel) fileNameLabel.innerText = file.name;
+        const statsLabel = document.getElementById('pdfStatsLabel');
+        if (statsLabel) statsLabel.innerText = `${pdf.numPages} sider • ${words.toLocaleString('no-NO')} ord lest av AI ✅`;
+
+        // Oppdater badge og banner i chatten
+        updateChatPdfAttachmentDisplay();
 
         // Sett forslag til tittel basert på filnavn hvis tomt
         const titleInp = document.getElementById('aiTopicInput');
-        if (!titleInp.value) {
+        if (titleInp && !titleInp.value) {
           titleInp.value = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
         }
 
         aiChatMessages.push({
           role: 'assistant',
-          content: `Jeg har nå lest og analysert hele **${file.name}** (${pdf.numPages} sider, ${words} ord)! 📚\n\nNå kan du stille meg spørsmål om innholdet i dokumentet, be meg trekke ut nøkkelrutiner, eller gi meg instrukser om hvordan du ønsker kurset bygget. Klikk på «Bygg og overfør» når du er klar!`
+          content: `### 📄 Dokument lest: **${file.name}**\n\nJeg har analysert alle **${pdf.numPages} sidene** (${words.toLocaleString('no-NO')} ord) i dokumentet! 📚✨\n\nNå kan du:\n- **Stille meg spørsmål** om rutiner, krav eller lovverk i PDF-en\n- Be meg **trekke ut nøkkelpunkter** eller foreslå en disposisjon\n- Gi instrukser om hvordan du vil at **moduler og caser** skal bygges\n- Eller klikke på **«🚀 Bygg og overfør kurset»** når du er klar!`
         });
         renderAiChatMessages();
 
       } catch (err) {
         console.error('PDF feil:', err);
-        statusEl.innerText = '❌ Kunne ikke lese PDF: ' + err.message;
+        if (statusEl) statusEl.innerText = '❌ Kunne ikke lese PDF: ' + err.message;
+        alert('Kunne ikke lese PDF: ' + err.message);
+      } finally {
+        if (chatSpinner) chatSpinner.style.display = 'none';
+      }
+    }
+
+    function updateChatPdfAttachmentDisplay() {
+      const composerBadge = document.getElementById('composerPdfBadge');
+      const composerName = document.getElementById('composerPdfName');
+      const composerInfo = document.getElementById('composerPdfInfo');
+      const badge = document.getElementById('aiActiveDocBadge');
+      const banner = document.getElementById('chatActiveDocBanner');
+      const bannerTitle = document.getElementById('chatActiveDocTitle');
+      const bannerDetails = document.getElementById('chatActiveDocDetails');
+
+      if (uploadedPdfName) {
+        if (composerBadge) composerBadge.style.display = 'flex';
+        if (composerName) composerName.innerText = uploadedPdfName;
+        if (composerInfo) composerInfo.innerText = `(${uploadedPdfPageCount} s • ${uploadedPdfWordCount.toLocaleString('no-NO')} ord)`;
+
+        if (badge) {
+          badge.style.display = 'inline-block';
+          badge.innerText = `📄 ${uploadedPdfName} (${uploadedPdfPageCount} s)`;
+        }
+
+        if (banner) {
+          banner.style.display = 'flex';
+          if (bannerTitle) bannerTitle.innerText = uploadedPdfName;
+          if (bannerDetails) bannerDetails.innerText = `(${uploadedPdfPageCount} sider, ${uploadedPdfWordCount.toLocaleString('no-NO')} ord lest)`;
+        }
+      } else {
+        if (composerBadge) composerBadge.style.display = 'none';
+        if (badge) badge.style.display = 'none';
+        if (banner) banner.style.display = 'none';
       }
     }
 
@@ -1921,30 +2259,52 @@
       uploadedPdfText = '';
       uploadedPdfName = '';
       uploadedPdfPageCount = 0;
-      document.getElementById('pdfFileInfo').style.display = 'none';
-      document.getElementById('pdfDropZone').style.display = 'block';
-      document.getElementById('pdfFileInput').value = '';
-      const badge = document.getElementById('aiActiveDocBadge');
-      if (badge) badge.style.display = 'none';
+      uploadedPdfWordCount = 0;
+      uploadedPdfDataUrl = '';
+
+      const infoEl = document.getElementById('pdfFileInfo');
+      const dropZone = document.getElementById('pdfDropZone');
+      if (infoEl) infoEl.style.display = 'none';
+      if (dropZone) dropZone.style.display = 'block';
+
+      const f1 = document.getElementById('pdfFileInput');
+      if (f1) f1.value = '';
+      const f2 = document.getElementById('chatPdfFileInput');
+      if (f2) f2.value = '';
+
+      updateChatPdfAttachmentDisplay();
+
+      aiChatMessages.push({
+        role: 'assistant',
+        content: 'Dokumentet er fjernet fra samtalen. Du kan laste opp en ny PDF via binders-knappen (📎) i chatten eller til venstre når du vil.'
+      });
+      renderAiChatMessages();
     }
 
     function renderAiChatMessages() {
       const container = document.getElementById('aiChatMessagesList');
       if (!container) return;
 
-      container.innerHTML = aiChatMessages.map(m => {
+      container.innerHTML = aiChatMessages.map((m, idx) => {
         const isUser = m.role === 'user';
         return `
           <div style="display: flex; justify-content: ${isUser ? 'flex-end' : 'flex-start'};">
-            <div style="max-width: 82%; padding: 0.85rem 1.15rem; border-radius: 16px; font-size: 0.88rem; line-height: 1.5; ${
+            <div style="max-width: 85%; padding: 0.9rem 1.25rem; border-radius: 16px; font-size: 0.88rem; line-height: 1.6; ${
               isUser 
-                ? 'background: #2563EB; color: white; border-bottom-right-radius: 4px;' 
-                : 'background: #F1F5F9; color: #1E293B; border-bottom-left-radius: 4px; border: 1px solid #E2E8F0;'
+                ? 'background: #2563EB; color: white; border-bottom-right-radius: 4px; box-shadow: 0 2px 8px rgba(37,99,235,0.2);' 
+                : 'background: #F8FAFC; color: #1E293B; border-bottom-left-radius: 4px; border: 1.5px solid #E2E8F0; box-shadow: 0 2px 6px rgba(0,0,0,0.03);'
             }">
-              <div style="font-weight: 800; font-size: 0.72rem; margin-bottom: 0.3rem; opacity: 0.75;">
-                ${isUser ? 'Deg' : '✨ Himmelblå AI'}
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; font-weight: 800; font-size: 0.72rem; opacity: 0.85;">
+                <span>${isUser ? 'Deg' : '✨ Himmelblå AI Kursdesigner'}</span>
+                ${!isUser ? `
+                  <button type="button" onclick="copyAiMessage(${idx})" style="background: none; border: none; color: #64748B; font-size: 0.72rem; cursor: pointer; padding: 0;" title="Kopier svar">
+                    📋 Kopier
+                  </button>
+                ` : ''}
               </div>
-              <div style="white-space: pre-wrap;">${escapeHtml(m.content)}</div>
+              <div>
+                ${isUser ? `<div style="white-space: pre-wrap;">${escapeHtml(m.content)}</div>` : formatAiMarkdown(m.content)}
+              </div>
             </div>
           </div>
         `;
@@ -1958,6 +2318,7 @@
       const text = inp.value.trim();
       if (!text) return;
       inp.value = '';
+      inp.style.height = 'auto';
 
       aiChatMessages.push({ role: 'user', content: text });
       renderAiChatMessages();
@@ -1966,8 +2327,9 @@
       const container = document.getElementById('aiChatMessagesList');
       container.innerHTML += `
         <div id="${typingId}" style="display: flex; justify-content: flex-start;">
-          <div style="background: #F1F5F9; padding: 0.6rem 1rem; border-radius: 16px; font-size: 0.82rem; color: #64748B; border: 1px solid #E2E8F0;">
-            ✨ AI tenker og analyserer...
+          <div style="background: #F8FAFC; padding: 0.65rem 1.15rem; border-radius: 16px; font-size: 0.82rem; color: #64748B; border: 1px solid #E2E8F0; display: flex; align-items: center; gap: 0.5rem;">
+            <span>✨</span>
+            <span>Himmelblå AI analyserer og formulerer svar...</span>
           </div>
         </div>
       `;
@@ -2006,8 +2368,64 @@
     }
 
     function sendQuickPrompt(promptText) {
-      document.getElementById('aiChatInput').value = promptText;
+      const inp = document.getElementById('aiChatInput');
+      if (inp) {
+        inp.value = promptText;
+        inp.style.height = 'auto';
+      }
       sendAiChatMessage();
+    }
+
+    function setupAiChatInputHandlers() {
+      const textarea = document.getElementById('aiChatInput');
+      if (!textarea || textarea.dataset.hasHandlers) return;
+      textarea.dataset.hasHandlers = 'true';
+
+      textarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendAiChatMessage();
+        }
+      });
+
+      textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 140) + 'px';
+      });
+    }
+
+    function setupChatDragAndDrop() {
+      const dropArea = document.getElementById('aiChatMessagesList');
+      if (!dropArea || dropArea.dataset.hasDrop) return;
+      dropArea.dataset.hasDrop = 'true';
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropArea.style.background = '#EFF6FF';
+          dropArea.style.outline = '2px dashed #3B82F6';
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropArea.style.background = 'white';
+          dropArea.style.outline = 'none';
+        }, false);
+      });
+
+      dropArea.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0 && files[0].type === 'application/pdf') {
+          processPdfFile(files[0]);
+        } else if (files && files.length > 0) {
+          alert('Vennligst slipp en PDF-fil (.pdf).');
+        }
+      }, false);
     }
 
     async function buildCourseFromAiCoPilot() {
@@ -2049,6 +2467,27 @@
             tags: data.course.tags || ['Fagkurs', comp],
             modules: data.course.modules || []
           };
+
+          // Dersom brukeren hadde lastet opp en PDF i samtalen, legg den automatisk inn i Leksjon 1 som PDF-blokk!
+          if (uploadedPdfDataUrl && currentEditingCourse.modules.length > 0 && currentEditingCourse.modules[0].lessons.length > 0) {
+            const firstLesson = currentEditingCourse.modules[0].lessons[0];
+            const hasPdfBlock = (firstLesson.blocks || []).some(b => b.type === 'pdf');
+            if (!hasPdfBlock) {
+              firstLesson.blocks.unshift({
+                id: 'b-pdf-' + Date.now(),
+                type: 'pdf',
+                content: {
+                  title: uploadedPdfName.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
+                  fileName: uploadedPdfName,
+                  url: uploadedPdfDataUrl,
+                  pageCount: uploadedPdfPageCount,
+                  fileSize: (uploadedPdfDataUrl.length * 0.75 / 1024).toFixed(0) + ' KB',
+                  instructions: 'Les gjennom fagdokumentet som ligger til grunn for dette kurset.'
+                }
+              });
+            }
+          }
+
           builderSelectedModuleIdx = 0;
           builderSelectedLessonIdx = 0;
           populateBuilderForm();
@@ -2373,6 +2812,47 @@
         return `
           <div style="border-radius:12px; overflow:hidden; aspect-ratio:16/9; background:#000;">
             <iframe style="width:100%; height:100%; border:none;" src="${(b.content.url || '').replace('watch?v=', 'embed/')}" allowfullscreen></iframe>
+          </div>
+        `;
+      }
+
+      if (b.type === 'pdf') {
+        const title = b.content.title || b.content.fileName || 'Fagdokument';
+        const docUrl = b.content.url || '';
+        return `
+          <div style="background:white; border:1.5px solid #FDE047; background:linear-gradient(to bottom, #FEFCE8, #FFFFFF); border-radius:14px; padding:1.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.04); display:flex; flex-direction:column; gap:1rem;">
+            <div style="display:flex; gap:1rem; align-items:flex-start;">
+              <div style="width:48px; height:48px; border-radius:12px; background:#FEF3C7; color:#D97706; display:flex; align-items:center; justify-content:center; font-size:1.6rem; flex-shrink:0; box-shadow:0 2px 6px rgba(217,119,6,0.15);">
+                📄
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:0.72rem; font-weight:800; color:#854D0E; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.25rem;">
+                  Fagdokument & Prosedyre
+                </div>
+                <h3 style="margin:0 0 0.35rem; font-size:1.2rem; font-weight:800; color:#1E293B;">
+                  ${escapeHtml(title)}
+                </h3>
+                ${b.content.instructions ? `<div style="font-size:0.88rem; color:#475569; line-height:1.5; margin-bottom:0.5rem; background:white; padding:0.6rem 0.85rem; border-radius:8px; border:1px solid #FEF08A;">📌 ${escapeHtml(b.content.instructions)}</div>` : ''}
+                <div style="display:flex; align-items:center; gap:0.75rem; font-size:0.75rem; color:#64748B;">
+                  <span>📎 ${escapeHtml(b.content.fileName || 'Dokument.pdf')}</span>
+                  ${b.content.fileSize ? `<span>• ${escapeHtml(b.content.fileSize)}</span>` : ''}
+                  ${b.content.pageCount ? `<span>• ${b.content.pageCount} sider</span>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:0.75rem; padding-top:0.75rem; border-top:1px solid #FEF08A; flex-wrap:wrap;">
+              ${docUrl ? `
+                <button type="button" onclick="previewPdfModal('${escapeQuote(docUrl)}', '${escapeQuote(title)}')" style="background:#2563EB; color:white; border:none; padding:0.65rem 1.35rem; border-radius:8px; font-weight:700; font-size:0.88rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 2px 8px rgba(37,99,235,0.25);">
+                  <span>👁️ Åpne og les PDF</span>
+                </button>
+                <a href="${docUrl}" download="${escapeHtml(b.content.fileName || 'dokument.pdf')}" target="_blank" style="text-decoration:none; background:white; color:#334155; border:1px solid #CBD5E1; padding:0.65rem 1.25rem; border-radius:8px; font-weight:700; font-size:0.88rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;">
+                  <span>⬇️ Last ned PDF</span>
+                </a>
+              ` : `
+                <span style="font-size:0.82rem; color:#94A3B8; font-style:italic;">Ingen fil tilknyttet ennå.</span>
+              `}
+            </div>
           </div>
         `;
       }
