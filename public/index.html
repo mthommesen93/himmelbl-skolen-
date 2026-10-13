@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Himmelblå Skolen</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #F1F5F9;
+      color: #1E293B;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================= -->
+  <!-- MODUS-VELGER I TOPPEN (Veksle mellom Ansattvisning og Administrator)      -->
+  <!-- ========================================================================= -->
+  <div style="background: #0B192C; color: #94A3B8; padding: 0.45rem 2rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span style="color: #38BDF8; font-weight: bold;">Himmelblå Hub Studio</span>
+      <span style="color: #475569;">|</span>
+      <span>Velg hvordan du vil se portalen:</span>
+    </div>
+
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <div style="background: rgba(255,255,255,0.08); border-radius: 8px; padding: 0.2rem; display: flex; gap: 0.25rem;">
+        <button id="viewSwitchEmployee" onclick="switchMainRole('employee')" style="padding: 0.25rem 0.85rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 0.75rem; background: #38BDF8; color: #0F172A;">
+          🎓 Ansattvisning
+        </button>
+        <button id="viewSwitchAdmin" onclick="switchMainRole('admin')" style="padding: 0.25rem 0.85rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 0.75rem; background: transparent; color: #94A3B8;">
+          ⚙️ Administrator
+        </button>
+      </div>
+
+      <button onclick="openOpenAiModal()" style="margin-left: 0.5rem; background: #9333EA; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> OpenAI
+      </button>
+
+      <button onclick="downloadBackup()" style="background: rgba(255,255,255,0.15); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.75rem;">
+        💾 Backup
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- HOVEDFLATE 1: ANSATTVISNING (/skolen) - 100% IDENTISK MED HUBEN            -->
+  <!-- ========================================================================= -->
+  <div id="roleViewEmployee" style="display: block;">
+    
+    <!-- Top Navy Header i Ansattvisning -->
+    <div style="background: #1E3A5F; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <button onclick="alert('Dette er Himmelblå Skolen Studio')" style="background: none; border: none; color: #93C5FD; cursor: pointer; font-size: 0.9rem;">← Tilbake til Huben</button>
+        <span style="color: #334155;">|</span>
+        <span style="font-weight: bold; fontSize: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+          🎓 Himmelblå Skolen
+        </span>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; background: #152B47; border-radius: 8px; padding: 0.3rem;">
+        <button id="empTabBoard" onclick="setEmployeeSubView('board')" style="padding: 0.4rem 1.2rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; background: white; color: #1E3A5F;">
+          📚 Mine kurs
+        </button>
+        <button id="empTabCalendar" onclick="setEmployeeSubView('kalender')" style="padding: 0.4rem 1.2rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; background: transparent; color: #94A3B8;">
+          📅 Kalender
+        </button>
+      </div>
+    </div>
+
+    <!-- Varselstripe ved frister -->
+    <div id="empUrgentBanner" style="background: #FEF2F2; border-bottom: 1px solid #FECACA; padding: 0.75rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+      <span style="color: #DC2626; font-weight: bold; font-size: 0.9rem;">⚠️ 1 kurs har utløpt frist!</span>
+      <button id="empAlertBtn" onclick="this.innerText='✅ Leder varslet'; this.style.background='#10B981';" style="background: #DC2626; color: white; border: none; padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">
+        Send varsel til leder
+      </button>
+    </div>
+
+    <div style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+      
+      <!-- Stats brikker i ansattvisning -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+        <div style="background: white; border-radius: 12px; padding: 1.25rem; border: 1px solid #E2E8F0; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <div style="font-size: 2rem;">📚</div>
+          <div>
+            <div id="statTotalCourses" style="font-size: 2rem; font-weight: bold; color: #3B82F6;">3</div>
+            <div style="color: #64748B; font-size: 0.82rem;">Tildelte kurs</div>
+          </div>
+        </div>
+
+        <div style="background: white; border-radius: 12px; padding: 1.25rem; border: 1px solid #E2E8F0; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <div style="font-size: 2rem;">✅</div>
+          <div>
+            <div id="statCompletedCourses" style="font-size: 2rem; font-weight: bold; color: #10B981;">1</div>
+            <div style="color: #64748B; font-size: 0.82rem;">Fullførte</div>
+          </div>
+        </div>
+
+        <div style="background: white; border-radius: 12px; padding: 1.25rem; border: 1px solid #E2E8F0; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <div style="font-size: 2rem;">⏳</div>
+          <div>
+            <div id="statPendingCourses" style="font-size: 2rem; font-weight: bold; color: #F59E0B;">2</div>
+            <div style="color: #64748B; font-size: 0.82rem;">Utestående</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div style="background: white; border-radius: 10px; padding: 0.75rem 1.25rem; border: 1px solid #E2E8F0; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+        <span style="font-size: 0.82rem; font-weight: 600; color: #64748B;">Filter:</span>
+        <div id="empTagFilters" style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <!-- Populated by JS -->
+        </div>
+
+        <div style="margin-left: auto; display: flex; gap: 0.35rem;">
+          <button onclick="setEmpStatusFilter('Alle')" id="empSt-Alle" style="padding: 0.3rem 0.7rem; border-radius: 20px; border: 1px solid #10B981; background: #10B981; color: white; font-size: 0.78rem; font-weight: 600; cursor: pointer;">Alle</button>
+          <button onclick="setEmpStatusFilter('Fullført')" id="empSt-Fullført" style="padding: 0.3rem 0.7rem; border-radius: 20px; border: 1px solid #CBD5E1; background: white; color: #475569; font-size: 0.78rem; font-weight: 600; cursor: pointer;">Fullført</button>
+          <button onclick="setEmpStatusFilter('Utestående')" id="empSt-Utestående" style="padding: 0.3rem 0.7rem; border-radius: 20px; border: 1px solid #CBD5E1; background: white; color: #475569; font-size: 0.78rem; font-weight: 600; cursor: pointer;">Utestående</button>
+        </div>
+      </div>
+
+      <!-- Mine kurs Grid i Ansattvisning -->
+      <div id="empBoardContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Kalender visning i Ansattvisning -->
+      <div id="empCalendarContainer" style="display: none; background: white; border-radius: 12px; padding: 2rem; border: 1px solid #E2E8F0;">
+        <h2 style="color: #1E293B; margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: bold;">📅 Kurs med frister</h2>
+        <div id="calendarItemsList" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Loaded via JS -->
+        </div>
+        <div style="margin-top: 1.5rem; padding: 1.25rem; background: #F0F9FF; border-radius: 10px; border: 1px solid #BAE6FD;">
+          <strong style="color: #0369A1; display: block; margin-bottom: 0.4rem; font-size: 0.85rem;">🔔 Automatisk varslingslogikk</strong>
+          <div style="font-size: 0.82rem; color: #0369A1; display: flex; flex-direction: column; gap: 0.3rem;">
+            <span>✅ Varsel sendt til ansatt 14 dager før frist</span>
+            <span>⏳ Ikke fullført: nytt varsel 2 dager etter frist + ny 2-dagers frist</span>
+            <span>📬 Fortsatt ikke fullført: nærmeste leder varsles i Huben</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- HOVEDFLATE 2: ADMINISTRATOR (/admin/skolen) - 100% IDENTISK MED HUBEN     -->
+  <!-- ========================================================================= -->
+  <div id="roleViewAdmin" style="display: none;">
+    
+    <!-- Admin Header -->
+    <div style="background: white; border-bottom: 1px solid #E2E8F0; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <button onclick="switchMainRole('employee')" style="background: none; border: none; cursor: pointer; color: #64748B; font-size: 0.9rem;">← Huben</button>
+        <span style="color: #CBD5E1;">|</span>
+        <h1 style="margin: 0; font-size: 1.3rem; color: #1E293B; font-weight: bold;">🎓 Kursportal – Administrator</h1>
+      </div>
+      <div style="display: flex; gap: 0.75rem;">
+        <button onclick="switchMainRole('employee')" style="padding: 0.6rem 1rem; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px; color: #334155; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+          👁 Ansattvisning
+        </button>
+        <button onclick="openOpenAiModal()" style="padding: 0.6rem 1.2rem; background: #9333EA; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem;">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> AI Kursassistent
+        </button>
+        <button onclick="createNewCourse()" style="padding: 0.6rem 1.5rem; background: #3B82F6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem;">
+          + Nytt kurs
+        </button>
+      </div>
+    </div>
+
+    <!-- Admin Body -->
+    <div style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
+      
+      <!-- Filters bar -->
+      <div style="background: white; border-radius: 12px; padding: 1rem 1.5rem; border: 1px solid #E2E8F0; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+        <input id="adminSearchInput" oninput="renderAdminCourses()" placeholder="🔍 Søk i kurs..." style="padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.85rem; min-width: 200px;">
+        
+        <select id="adminCompanySelect" onchange="renderAdminCourses()" style="padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.85rem; background: white;">
+          <option value="Alle">Alle selskap</option>
+          <option value="Barnevern">Barnevern</option>
+          <option value="BPA">BPA</option>
+          <option value="Helse og omsorg">Helse og omsorg</option>
+          <option value="Fosterhjem">Fosterhjem</option>
+        </select>
+
+        <select id="adminTagSelect" onchange="renderAdminCourses()" style="padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.85rem; background: white;">
+          <option value="Alle">Alle tagger</option>
+          <option value="HMS">#HMS</option>
+          <option value="Legemiddel">#Legemiddel</option>
+          <option value="Tvang & makt">#Tvang & makt</option>
+          <option value="Brann">#Brann</option>
+          <option value="Faglig">#Faglig</option>
+        </select>
+
+        <div style="margin-left: auto; display: flex; gap: 0.35rem;">
+          <button onclick="setAdminStatusFilter('Alle')" id="adminSt-Alle" style="padding: 0.3rem 0.75rem; border-radius: 20px; border: 1px solid #3B82F6; background: #3B82F6; color: white; font-size: 0.78rem; font-weight: 600; cursor: pointer;">Alle</button>
+          <button onclick="setAdminStatusFilter('Aktiv')" id="adminSt-Aktiv" style="padding: 0.3rem 0.75rem; border-radius: 20px; border: 1px solid #CBD5E1; background: white; color: #475569; font-size: 0.78rem; font-weight: 600; cursor: pointer;">Aktiv</button>
+          <button onclick="setAdminStatusFilter('Utkast')" id="adminSt-Utkast" style="padding: 0.3rem 0.75rem; border-radius: 20px; border: 1px solid #CBD5E1; background: white; color: #475569; font-size: 0.78rem; font-weight: 600; cursor: pointer;">Utkast</button>
+        </div>
+      </div>
+
+      <div id="adminCourseCountLabel" style="margin-bottom: 0.75rem; color: #64748B; font-size: 0.85rem;">Viser 3 av 3 kurs</div>
+
+      <!-- Admin Board Grid -->
+      <div id="adminGridContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+        <!-- Populated via JS -->
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- KURSBYGGER WIZARD (ADVANCED COURSE FORM MED BILDER OG BLOKKER)            -->
+  <!-- ========================================================================= -->
+  <div id="courseBuilderModal" style="display: none; position: fixed; inset: 0; background: #F1F5F9; z-index: 50; overflow-y: auto; padding: 2rem;">
+    <div style="max-width: 1100px; margin: 0 auto;">
+      
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 1.5rem;">
+          <h2 id="builderHeading" style="margin: 0; color: #1E293B; font-size: 1.5rem; font-weight: bold;">➕ Nytt kurs</h2>
+          
+          <div style="display: flex; gap: 0.5rem; align-items: center; background: white; padding: 0.3rem; border-radius: 20px; border: 1px solid #E2E8F0;">
+            <button onclick="setBuilderTab(1)" id="builderTabBtn-1" style="padding: 0.4rem 1rem; border-radius: 16px; border: none; background: #3B82F6; color: white; font-weight: bold; font-size: 0.85rem; cursor: pointer;">
+              1. Innstillinger & Omslag
+            </button>
+            <button onclick="setBuilderTab(2)" id="builderTabBtn-2" style="padding: 0.4rem 1rem; border-radius: 16px; border: none; background: transparent; color: #64748B; font-weight: bold; font-size: 0.85rem; cursor: pointer;">
+              2. Kursbygger & Blokker
+            </button>
+            <button onclick="previewCurrentInPlayer()" style="background: #F8FAFC; border: 1px solid #CBD5E1; color: #475569; padding: 0.4rem 1rem; border-radius: 16px; font-weight: bold; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+              👁 Forhåndsvis
+            </button>
+          </div>
+        </div>
+
+        <button onclick="closeCourseBuilder()" style="background: none; border: none; color: #64748B; cursor: pointer; font-size: 1.1rem; font-weight: bold;">✕ Lukk</button>
+      </div>
+
+      <!-- Builder Innhold -->
+      <div style="background: white; border-radius: 14px; padding: 2.5rem; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        
+        <!-- TRINN 1: INNSTILLINGER & OMSLAGSBILDE -->
+        <div id="builderTab-1">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem;">
+            
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+              <label>
+                <span style="display: block; font-size: 0.8rem; color: #64748B; font-weight: 600; margin-bottom: 0.3rem;">Kurstittel *</span>
+                <input id="formTitle" style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.9rem;" placeholder="F.eks. Medisinkurs (Legemiddelhåndtering)">
+              </label>
+
+              <label>
+                <span style="display: block; font-size: 0.8rem; color: #64748B; font-weight: 600; margin-bottom: 0.3rem;">Beskrivelse</span>
+                <textarea id="formDesc" rows="3" style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.9rem;" placeholder="Kort introduksjon til kurset..."></textarea>
+              </label>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <label>
+                  <span style="display: block; font-size: 0.8rem; color: #64748B; font-weight: 600; margin-bottom: 0.3rem;">Gyldighet (måneder)</span>
+                  <input id="formValidity" type="number" value="12" style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.9rem;">
+                </label>
+                <label>
+                  <span style="display: block; font-size: 0.8rem; color: #64748B; font-weight: 600; margin-bottom: 0.3rem;">Gjennomføringsfrist</span>
+                  <input id="formDueDate" type="date" style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.9rem;">
+                </label>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                <input type="checkbox" id="formMandatory" checked style="width: 16px; height: 16px;">
+                <label for="formMandatory" style="font-size: 0.85rem; font-weight: 600; color: #1E293B;">Obligatorisk for tildelte avdelinger</label>
+              </div>
+            </div>
+
+            <!-- Bilde & Farge for Omslag -->
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+              <span style="font-size: 0.85rem; font-weight: bold; color: #1E293B; display: flex; align-items: center; gap: 0.5rem;">
+                🖼️ Omslagsbilde / Thumbnail
+              </span>
+
+              <div id="formThumbPreview" style="height: 140px; border-radius: 10px; background: #E2E8F0; border: 1px solid #CBD5E1; display: flex; align-items: center; justify-content: center; overflow: hidden; background-size: cover; background-position: center;">
+                <span id="formThumbPlaceholder" style="color: #94A3B8; font-size: 0.85rem;">Intet bilde valgt</span>
+              </div>
+
+              <div>
+                <label style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.5rem 1rem; background: white; border: 1px solid #CBD5E1; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">
+                  <i class="fa-solid fa-folder-open text-blue-600"></i> Velg bildefil fra Mac
+                  <input type="file" onchange="handleImageUploadFile(event, 'thumb')" accept="image/*" style="display: none;">
+                </label>
+              </div>
+
+              <label>
+                <span style="display: block; font-size: 0.75rem; color: #64748B; font-weight: 600; margin-bottom: 0.2rem;">Eller lim inn bilde-URL:</span>
+                <input id="formThumbUrl" oninput="updateThumbPreview(this.value)" placeholder="https://..." style="width: 100%; padding: 0.45rem 0.65rem; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.85rem;">
+              </label>
+
+              <!-- Gradient valg hvis ikke bilde -->
+              <div>
+                <span style="display: block; font-size: 0.75rem; color: #64748B; font-weight: 600; margin-bottom: 0.3rem;">Eller velg standardfarge:</span>
+                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                  <button type="button" onclick="setGradientChoice('blue')" style="width: 24px; height: 24px; border-radius: 50%; border: none; background: #3B82F6; cursor: pointer;"></button>
+                  <button type="button" onclick="setGradientChoice('green')" style="width: 24px; height: 24px; border-radius: 50%; border: none; background: #10B981; cursor: pointer;"></button>
+                  <button type="button" onclick="setGradientChoice('purple')" style="width: 24px; height: 24px; border-radius: 50%; border: none; background: #8B5CF6; cursor: pointer;"></button>
+                  <button type="button" onclick="setGradientChoice('red')" style="width: 24px; height: 24px; border-radius: 50%; border: none; background: #EF4444; cursor: pointer;"></button>
+                  <button type="button" onclick="setGradientChoice('orange')" style="width: 24px; height: 24px; border-radius: 50%; border: none; background: #F59E0B; cursor: pointer;"></button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TRINN 2: KURSBYGGER MED MODULER, LEKSJONER & BILDEBLOKK -->
+        <div id="builderTab-2" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0; font-size: 1.1rem; color: #1E293B;">Moduler og innholdsblokker</h3>
+            <button onclick="addBuilderModule()" style="padding: 0.5rem 1rem; background: #1E293B; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem;">
+              + Ny modul
+            </button>
+          </div>
+
+          <div id="builderModulesList" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Actions -->
+      <div style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: flex-end;">
+        <button onclick="saveCourseFromBuilder('Utkast')" style="padding: 0.75rem 1.5rem; background: white; border: 1px solid #CBD5E1; border-radius: 8px; cursor: pointer; font-weight: 600; color: #475569;">
+          Lagre som utkast
+        </button>
+        <button onclick="saveCourseFromBuilder('Aktiv')" style="padding: 0.75rem 2rem; background: #10B981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem;">
+          🚀 Publiser kurs
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- FULLSKJERM COURSE PLAYER (100% IDENTISK MED HUBENS COURSEPLAYER)           -->
+  <!-- ========================================================================= -->
+  <div id="coursePlayerModal" style="display: none; position: fixed; inset: 0; background: white; z-index: 100; flex-direction: column;">
+    
+    <!-- Player Header -->
+    <div style="background: #1E293B; color: white; padding: 0.75rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <button onclick="closeCoursePlayer()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 0.4rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+          <span>✕</span> Lukk
+        </button>
+        <div>
+          <div id="playerHeadingCourse" style="font-size: 1.1rem; font-weight: bold;">Kurstittel</div>
+          <div style="font-size: 0.75rem; color: #94A3B8;">Ansattvisning • Himmelblå Skolen</div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span id="playerProgressPct" style="font-size: 0.8rem; color: #94A3B8;">0% fullført</span>
+        <div style="width: 120px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden;">
+          <div id="playerProgressFill" style="height: 100%; width: 0%; background: #10B981; transition: width 0.3s;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Player Body (Sidebar + Content) -->
+    <div style="flex: 1; display: flex; overflow: hidden;">
+      
+      <!-- Venstremeny med moduler -->
+      <div style="width: 320px; background: #F8FAFC; border-right: 1px solid #E2E8F0; overflow-y: auto; padding: 1.5rem;">
+        <div style="font-size: 0.75rem; font-weight: bold; color: #64748B; text-transform: uppercase; margin-bottom: 1rem;">Innhold</div>
+        <div id="playerLessonsNav" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Loaded via JS -->
+        </div>
+      </div>
+
+      <!-- Innholdsflate -->
+      <div style="flex: 1; overflow-y: auto; padding: 3rem; max-width: 850px; margin: 0 auto; width: 100%;">
+        <div style="font-size: 0.85rem; font-weight: bold; color: #3B82F6; margin-bottom: 0.5rem;" id="playerLessonMeta">Modul 1 • Leksjon 1</div>
+        <h1 id="playerLessonTitle" style="font-size: 2rem; color: #1E293B; margin-top: 0; margin-bottom: 2rem; font-weight: bold;">Leksjonstittel</h1>
+
+        <div id="playerBlocksList" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <!-- Blocks rendered via JS -->
+        </div>
+
+        <!-- Neste knapp -->
+        <div style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #E2E8F0; display: flex; justify-content: flex-end;">
+          <button onclick="advancePlayerNextLesson()" id="playerNextBtn" style="background: #10B981; color: white; border: none; padding: 0.85rem 2rem; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem;">
+            Fullfør leksjon & Neste →
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- OPENAI AI-MODAL                                                           -->
+  <!-- ========================================================================= -->
+  <div id="openAiModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 110; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: white; border-radius: 20px; max-width: 500px; width: 100%; padding: 1.75rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 1rem;">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: bold; color: #1E293B; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fa-solid fa-wand-magic-sparkles text-purple-600"></i> Generer kurs med OpenAI
+        </h3>
+        <button onclick="closeOpenAiModal()" style="background: none; border: none; font-size: 1.1rem; cursor: pointer; color: #94A3B8;">✕</button>
+      </div>
+
+      <div style="background: #FAF5FF; border: 1px solid #E9D5FF; border-radius: 10px; padding: 0.85rem;">
+        <label style="display: block; font-size: 0.75rem; font-weight: bold; color: #6B21A8; margin-bottom: 0.3rem;">Din OpenAI API-nøkkel:</label>
+        <input type="password" id="openAiKey" placeholder="sk-..." style="width: 100%; padding: 0.45rem 0.65rem; border-radius: 6px; border: 1px solid #D8B4FE; font-size: 0.85rem;">
+        <span style="font-size: 0.68rem; color: #7E22CE; margin-top: 0.3rem; display: block;">Lagres kun i din nettleser. Bruker gpt-4o-mini.</span>
+      </div>
+
+      <label>
+        <span style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.25rem;">Hva skal kurset handle om? *</span>
+        <input id="aiCourseTopic" placeholder="F.eks. Brannvern og evakuering for barnevern" style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.9rem;">
+      </label>
+
+      <label>
+        <span style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.25rem;">Avdeling / Målgruppe:</span>
+        <select id="aiCourseCompany" style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.85rem; background: white;">
+          <option value="Barnevern">Barnevern</option>
+          <option value="Helse og omsorg">Helse og omsorg</option>
+          <option value="BPA">BPA</option>
+          <option value="Fosterhjem">Fosterhjem</option>
+          <option value="Alle selskap">Alle selskap</option>
+        </select>
+      </label>
+
+      <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+        <button onclick="closeOpenAiModal()" style="flex: 1; padding: 0.65rem; border-radius: 6px; border: 1px solid #CBD5E1; background: white; font-weight: 600; cursor: pointer;">Avbryt</button>
+        <button onclick="generateCourseWithAi()" id="btnSubmitAi" style="flex: 1.5; padding: 0.65rem; border-radius: 6px; border: none; background: #9333EA; color: white; font-weight: bold; cursor: pointer;">
+          Generer kurs nå ✨
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- JAVASCRIPT LOGIKK -->
+  <script>
+    // Faste farger/gradients nøyaktig som i Huben
+    const GRADIENTS = {
+      blue:   'linear-gradient(135deg,#3B82F6,#1D4ED8)',
+      green:  'linear-gradient(135deg,#10B981,#047857)',
+      purple: 'linear-gradient(135deg,#8B5CF6,#6D28D9)',
+      orange: 'linear-gradient(135deg,#F59E0B,#D97706)',
+      pink:   'linear-gradient(135deg,#EC4899,#BE185D)',
+      teal:   'linear-gradient(135deg,#14B8A6,#0F766E)',
+      red:    'linear-gradient(135deg,#EF4444,#B91C1C)',
+      dark:   'linear-gradient(135deg,#334155,#0F172A)',
+    };
+
+    let allCourses = [];
+    let currentRole = 'employee'; // 'employee' | 'admin'
+    let currentEmpSubView = 'board'; // 'board' | 'kalender'
+    let selectedEmpTag = 'Alle';
+    let selectedEmpStatus = 'Alle';
+    let currentEditingCourse = null;
+    let builderCurrentTab = 1;
+    let selectedGradient = 'blue';
+
+    // Player state
+    let activePlayerCourse = null;
+    let activePlayerLessonIdx = 0;
+    let completedPlayerLessonIds = [];
+    let activeQuizAnswers = {};
+
+    function daysUntil(d) {
+      if (!d) return null;
+      return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
+    }
+
+    // 1. Last inn kurs fra backend
+    async function fetchCourses() {
+      try {
+        const res = await fetch('/api/courses');
+        allCourses = await res.json();
+        renderAllViews();
+      } catch (e) {
+        console.error('Kunne ikke hente kurs:', e);
+      }
+    }
+
+    // 2. Skift mellom Ansattvisning og Administrator
+    function switchMainRole(role) {
+      currentRole = role;
+      if (role === 'employee') {
+        document.getElementById('roleViewEmployee').style.display = 'block';
+        document.getElementById('roleViewAdmin').style.display = 'none';
+        document.getElementById('viewSwitchEmployee').style.background = '#38BDF8';
+        document.getElementById('viewSwitchEmployee').style.color = '#0F172A';
+        document.getElementById('viewSwitchAdmin').style.background = 'transparent';
+        document.getElementById('viewSwitchAdmin').style.color = '#94A3B8';
+      } else {
+        document.getElementById('roleViewEmployee').style.display = 'none';
+        document.getElementById('roleViewAdmin').style.display = 'block';
+        document.getElementById('viewSwitchAdmin').style.background = '#38BDF8';
+        document.getElementById('viewSwitchAdmin').style.color = '#0F172A';
+        document.getElementById('viewSwitchEmployee').style.background = 'transparent';
+        document.getElementById('viewSwitchEmployee').style.color = '#94A3B8';
+      }
+      renderAllViews();
+    }
+
+    function setEmployeeSubView(v) {
+      currentEmpSubView = v;
+      if (v === 'board') {
+        document.getElementById('empBoardContainer').style.display = 'grid';
+        document.getElementById('empCalendarContainer').style.display = 'none';
+        document.getElementById('empTabBoard').style.background = 'white';
+        document.getElementById('empTabBoard').style.color = '#1E3A5F';
+        document.getElementById('empTabCalendar').style.background = 'transparent';
+        document.getElementById('empTabCalendar').style.color = '#94A3B8';
+      } else {
+        document.getElementById('empBoardContainer').style.display = 'none';
+        document.getElementById('empCalendarContainer').style.display = 'block';
+        document.getElementById('empTabCalendar').style.background = 'white';
+        document.getElementById('empTabCalendar').style.color = '#1E3A5F';
+        document.getElementById('empTabBoard').style.background = 'transparent';
+        document.getElementById('empTabBoard').style.color = '#94A3B8';
+      }
+    }
+
+    function renderAllViews() {
+      renderEmployeeView();
+      renderAdminView();
+    }
+
+    // =========================================================================
+    // ANSATTVISNING LOGIKK (100% LIKT HUBEN)
+    // =========================================================================
+    function renderEmployeeView() {
+      // Stats
+      document.getElementById('statTotalCourses').innerText = allCourses.length;
+      document.getElementById('statCompletedCourses').innerText = allCourses.filter(c => (c.progress || 0) === 100).length;
+      document.getElementById('statPendingCourses').innerText = allCourses.filter(c => (c.progress || 0) < 100).length;
+
+      // Tags filter buttons
+      const tags = ['Alle', ...new Set(allCourses.flatMap(c => c.tags || []))];
+      const tagContainer = document.getElementById('empTagFilters');
+      tagContainer.innerHTML = tags.map(t => `
+        <button onclick="setEmpTagFilter('${t}')" style="padding: 0.3rem 0.7rem; border-radius: 20px; border: 1px solid ${selectedEmpTag === t ? '#3B82F6' : '#CBD5E1'}; background: ${selectedEmpTag === t ? '#3B82F6' : 'white'}; color: ${selectedEmpTag === t ? 'white' : '#475569'}; font-size: 0.78rem; font-weight: 600; cursor: pointer;">
+          ${t === 'Alle' ? 'Alle' : '#' + t}
+        </button>
+      `).join('');
+
+      // Filter courses
+      const filtered = allCourses.filter(c => {
+        const prog = c.progress || 0;
+        if (selectedEmpTag !== 'Alle' && !(c.tags || []).includes(selectedEmpTag)) return false;
+        if (selectedEmpStatus === 'Fullført' && prog < 100) return false;
+        if (selectedEmpStatus === 'Utestående' && prog === 100) return false;
+        return true;
+      });
+
+      // Render cards
+      const container = document.getElementById('empBoardContainer');
+      container.innerHTML = filtered.map(c => {
+        const prog = c.progress || 0;
+        const days = daysUntil(c.dueDate);
+        const grad = GRADIENTS[c.gradientId] || GRADIENTS.blue;
+        const bgStyle = c.thumbnailUrl ? `url(${c.thumbnailUrl}) center/cover` : grad;
+
+        let statusBadge = `<span style="background:#EFF6FF; color:#1D4ED8; padding:0.25rem 0.6rem; border-radius:20px; font-size:0.75rem; font-weight:bold;">📚 Ikke påbegynt</span>`;
+        if (prog === 100) {
+          statusBadge = `<span style="background:#ECFDF5; color:#065F46; padding:0.25rem 0.6rem; border-radius:20px; font-size:0.75rem; font-weight:bold;">✅ Fullført</span>`;
+        } else if (days !== null && days < 0) {
+          statusBadge = `<span style="background:#FEF2F2; color:#DC2626; padding:0.25rem 0.6rem; border-radius:20px; font-size:0.75rem; font-weight:bold;">⚠️ Frist utløpt</span>`;
+        } else if (days !== null && days <= 7) {
+          statusBadge = `<span style="background:#FEF2F2; color:#DC2626; padding:0.25rem 0.6rem; border-radius:20px; font-size:0.75rem; font-weight:bold;">🔴 ${days}d igjen</span>`;
+        }
+
+        return `
+          <div style="background:white; border-radius:14px; overflow:hidden; border:1px solid #E2E8F0; box-shadow:0 2px 8px rgba(0,0,0,0.04); display:flex; flex-direction:column; justify-content:space-between;">
+            
+            <!-- Thumbnail -->
+            <div style="height:140px; background:${bgStyle}; position:relative;">
+              <div style="position:absolute; inset:0; background:rgba(0,0,0,0.15);"></div>
+              <div style="position:absolute; top:0.75rem; left:0.75rem; display:flex; gap:0.35rem;">
+                ${c.mandatory ? '<span style="background:rgba(0,0,0,0.55); color:white; font-size:0.68rem; font-weight:bold; padding:0.15rem 0.5rem; border-radius:20px;">Obligatorisk</span>' : ''}
+              </div>
+              <div style="position:absolute; bottom:0.75rem; right:0.75rem; background:rgba(0,0,0,0.5); border-radius:20px; padding:0.2rem 0.6rem; color:white; font-size:0.75rem; font-weight:bold;">
+                ${prog}%
+              </div>
+            </div>
+
+            <!-- Body -->
+            <div style="padding:1rem 1.25rem; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+              <div>
+                <h3 style="margin:0 0 0.3rem; color:#1E293B; font-size:0.95rem; font-weight:700; line-height:1.3;">${c.title}</h3>
+                <p style="color:#64748B; font-size:0.8rem; margin:0 0 0.75rem; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.description || ''}</p>
+
+                <!-- Progress bar -->
+                <div style="margin-bottom:0.75rem;">
+                  <div style="height:6px; background:#E2E8F0; border-radius:3px; overflow:hidden;">
+                    <div style="height:100%; width:${prog}%; background:${prog===100?'#10B981':'#3B82F6'}; transition:width 0.4s;"></div>
+                  </div>
+                </div>
+
+                <!-- Tags -->
+                <div style="display:flex; gap:0.3rem; flex-wrap:wrap; margin-bottom:0.75rem;">
+                  ${(c.tags || []).map(t => `<span style="background:#EFF6FF; color:#1D4ED8; font-size:0.65rem; font-weight:bold; padding:0.15rem 0.45rem; border-radius:20px;">#${t}</span>`).join('')}
+                </div>
+              </div>
+
+              <!-- Footer with start button -->
+              <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #F1F5F9; padding-top:0.75rem;">
+                ${statusBadge}
+                ${prog === 100 ? `
+                  <span style="background:#ECFDF5; color:#065F46; padding:0.45rem 1rem; border-radius:6px; font-weight:bold; font-size:0.82rem;">✅</span>
+                ` : `
+                  <button onclick="launchCourseInPlayer(${c.id})" style="background:#3B82F6; color:white; padding:0.45rem 1rem; border-radius:6px; border:none; font-weight:bold; font-size:0.82rem; cursor:pointer;">
+                    ${prog > 0 ? 'Fortsett →' : 'Start →'}
+                  </button>
+                `}
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+
+      // Kalender visning
+      const calList = document.getElementById('calendarItemsList');
+      calList.innerHTML = allCourses.filter(c => c.dueDate).map(c => {
+        const days = daysUntil(c.dueDate);
+        const grad = GRADIENTS[c.gradientId] || GRADIENTS.blue;
+        return `
+          <div style="display:flex; gap:1.25rem; align-items:center; padding:1rem; border-radius:10px; background:${days!==null&&days<7?'#FEF2F2':'#F8FAFC'}; border:1px solid ${days!==null&&days<7?'#FECACA':'#E2E8F0'};">
+            <div style="text-align:center; min-width:65px; background:${days!==null&&days<7?'#DC2626':grad}; color:white; border-radius:10px; padding:0.65rem 0.5rem;">
+              <div style="font-size:0.7rem; font-weight:bold;">${new Date(c.dueDate).toLocaleDateString('no-NO',{month:'short'}).toUpperCase()}</div>
+              <div style="font-size:1.8rem; font-weight:bold; line-height:1;">${new Date(c.dueDate).getDate()}</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:bold; color:#1E293B; margin-bottom:0.2rem;">${c.title}</div>
+              <div style="font-size:0.82rem; color:#64748B;">${days!==null&&days<0?'⚠️ Utløpt!':days!==null?`${days} dager igjen`:''}</div>
+            </div>
+            <button onclick="launchCourseInPlayer(${c.id})" style="background:#3B82F6; color:white; border:none; padding:0.4rem 1rem; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.8rem;">
+              Ta kurs →
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setEmpTagFilter(t) {
+      selectedEmpTag = t;
+      renderEmployeeView();
+    }
+
+    function setEmpStatusFilter(s) {
+      selectedEmpStatus = s;
+      ['Alle', 'Fullført', 'Utestående'].forEach(x => {
+        const btn = document.getElementById(`empSt-${x}`);
+        if (x === s) {
+          btn.style.background = '#10B981';
+          btn.style.color = 'white';
+          btn.style.border = '1px solid #10B981';
+        } else {
+          btn.style.background = 'white';
+          btn.style.color = '#475569';
+          btn.style.border = '1px solid #CBD5E1';
+        }
+      });
+      renderEmployeeView();
+    }
+
+    // =========================================================================
+    // ADMINISTRATOR LOGIKK (100% LIKT HUBEN)
+    // =========================================================================
+    let adminFilterStatus = 'Alle';
+
+    function renderAdminView() {
+      const search = (document.getElementById('adminSearchInput')?.value || '').toLowerCase();
+      const comp = document.getElementById('adminCompanySelect')?.value || 'Alle';
+      const tag = document.getElementById('adminTagSelect')?.value || 'Alle';
+
+      const filtered = allCourses.filter(c => {
+        if (search && !c.title.toLowerCase().includes(search) && !(c.description || '').toLowerCase().includes(search)) return false;
+        if (comp !== 'Alle' && !(c.companies || []).includes('Alle selskap') && !(c.companies || []).includes(comp)) return false;
+        if (tag !== 'Alle' && !(c.tags || []).includes(tag)) return false;
+        if (adminFilterStatus !== 'Alle' && c.status !== adminFilterStatus) return false;
+        return true;
+      });
+
+      document.getElementById('adminCourseCountLabel').innerText = `Viser ${filtered.length} av ${allCourses.length} kurs`;
+
+      const grid = document.getElementById('adminGridContainer');
+      grid.innerHTML = filtered.map(c => {
+        const grad = GRADIENTS[c.gradientId] || GRADIENTS.blue;
+        const bgStyle = c.thumbnailUrl ? `url(${c.thumbnailUrl}) center/cover` : grad;
+        const totalLessons = (c.modules || []).reduce((a, m) => a + (m.lessons || []).length, 0);
+
+        return `
+          <div style="background:white; border-radius:14px; overflow:hidden; border:1px solid #E2E8F0; box-shadow:0 2px 8px rgba(0,0,0,0.04); display:flex; flex-direction:column; justify-content:space-between;">
+            
+            <!-- Thumbnail -->
+            <div style="height:140px; background:${bgStyle}; position:relative; padding:0.75rem; display:flex; align-items:flex-end;">
+              <div style="position:absolute; top:0.75rem; left:0.75rem; display:flex; gap:0.35rem; flex-wrap:wrap;">
+                ${c.mandatory ? '<span style="background:rgba(0,0,0,0.55); color:white; font-size:0.68rem; font-weight:bold; padding:0.15rem 0.45rem; border-radius:20px;">Obligatorisk</span>' : ''}
+                <span style="background:${c.status==='Aktiv'?'rgba(16,185,129,0.9)':'rgba(245,158,11,0.9)'}; color:white; font-size:0.68rem; font-weight:bold; padding:0.15rem 0.45rem; border-radius:20px;">${c.status}</span>
+              </div>
+              <div style="position:absolute; top:0.75rem; right:0.75rem; display:flex; gap:0.35rem;">
+                <button onclick="editCourseInBuilder(${c.id})" style="background:rgba(255,255,255,0.9); border:none; border-radius:6px; padding:0.3rem 0.6rem; cursor:pointer; font-size:0.75rem; font-weight:bold; color:#334155;">✏️ Rediger</button>
+              </div>
+              ${c.thumbnailUrl ? `<div style="color:white; font-weight:bold; font-size:1rem; text-shadow:0 1px 4px rgba(0,0,0,0.7);">${c.title}</div>` : ''}
+            </div>
+
+            <!-- Body -->
+            <div style="padding:1rem 1.25rem; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+              <div>
+                ${!c.thumbnailUrl ? `<h3 style="margin:0 0 0.4rem; color:#1E293B; font-size:1rem; font-weight:700; line-height:1.3;">${c.title}</h3>` : ''}
+                <p style="color:#64748B; font-size:0.82rem; margin:0 0 0.75rem; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.description || ''}</p>
+
+                <div style="display:flex; gap:0.3rem; flex-wrap:wrap; margin-bottom:0.75rem;">
+                  ${(c.tags || []).map(t => `<span style="background:#EFF6FF; color:#1D4ED8; font-size:0.68rem; font-weight:bold; padding:0.15rem 0.5rem; border-radius:20px;">#${t}</span>`).join('')}
+                </div>
+              </div>
+
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #F1F5F9; padding-top:0.75rem; font-size:0.78rem; color:#94A3B8;">
+                  <span>📚 ${(c.modules || []).length} mod · ${totalLessons} leks</span>
+                  <span>📅 ${c.dueDate || 'Ingen frist'}</span>
+                </div>
+                <div style="margin-top:0.5rem; font-size:0.72rem; color:#94A3B8;">
+                  🏢 ${(c.companies || []).join(', ')}
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAdminCourses() {
+      renderAdminView();
+    }
+
+    function setAdminStatusFilter(s) {
+      adminFilterStatus = s;
+      ['Alle', 'Aktiv', 'Utkast'].forEach(x => {
+        const btn = document.getElementById(`adminSt-${x}`);
+        if (x === s) {
+          btn.style.background = '#3B82F6';
+          btn.style.color = 'white';
+          btn.style.border = '1px solid #3B82F6';
+        } else {
+          btn.style.background = 'white';
+          btn.style.color = '#475569';
+          btn.style.border = '1px solid #CBD5E1';
+        }
+      });
+      renderAdminView();
+    }
+
+    // =========================================================================
+    // KURSBYGGER WIZARD (MED BILDER OG BLOKKER)
+    // =========================================================================
+    function createNewCourse() {
+      currentEditingCourse = {
+        id: Date.now(),
+        title: '',
+        description: '',
+        mandatory: true,
+        companies: ['Alle selskap'],
+        units: [],
+        dueDate: '',
+        validityMonths: 12,
+        status: 'Aktiv',
+        gradientId: 'blue',
+        thumbnailUrl: '',
+        tags: ['Faglig'],
+        modules: [
+          {
+            id: 1,
+            title: 'Modul 1: Introduksjon',
+            lessons: [
+              {
+                id: 101,
+                title: 'Velkommen til kurset',
+                duration: '5 min',
+                blocks: [
+                  { id: 'b1', type: 'text', content: { text: 'Skriv din leksjonstekst her...' } }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+      populateBuilderForm();
+      document.getElementById('builderHeading').innerText = '➕ Nytt kurs';
+      document.getElementById('courseBuilderModal').style.display = 'block';
+      setBuilderTab(1);
+    }
+
+    function editCourseInBuilder(id) {
+      const found = allCourses.find(c => c.id === id);
+      if (!found) return;
+      currentEditingCourse = JSON.parse(JSON.stringify(found));
+      populateBuilderForm();
+      document.getElementById('builderHeading').innerText = `✏️ Rediger: ${currentEditingCourse.title}`;
+      document.getElementById('courseBuilderModal').style.display = 'block';
+      setBuilderTab(1);
+    }
+
+    function closeCourseBuilder() {
+      document.getElementById('courseBuilderModal').style.display = 'none';
+      currentEditingCourse = null;
+    }
+
+    function setBuilderTab(tab) {
+      builderCurrentTab = tab;
+      if (tab === 1) {
+        document.getElementById('builderTab-1').style.display = 'block';
+        document.getElementById('builderTab-2').style.display = 'none';
+        document.getElementById('builderTabBtn-1').style.background = '#3B82F6';
+        document.getElementById('builderTabBtn-1').style.color = 'white';
+        document.getElementById('builderTabBtn-2').style.background = 'transparent';
+        document.getElementById('builderTabBtn-2').style.color = '#64748B';
+      } else {
+        document.getElementById('builderTab-1').style.display = 'none';
+        document.getElementById('builderTab-2').style.display = 'block';
+        document.getElementById('builderTabBtn-2').style.background = '#3B82F6';
+        document.getElementById('builderTabBtn-2').style.color = 'white';
+        document.getElementById('builderTabBtn-1').style.background = 'transparent';
+        document.getElementById('builderTabBtn-1').style.color = '#64748B';
+        renderBuilderModules();
+      }
+    }
+
+    function populateBuilderForm() {
+      if (!currentEditingCourse) return;
+      document.getElementById('formTitle').value = currentEditingCourse.title || '';
+      document.getElementById('formDesc').value = currentEditingCourse.description || '';
+      document.getElementById('formValidity').value = currentEditingCourse.validityMonths || 12;
+      document.getElementById('formDueDate').value = currentEditingCourse.dueDate || '';
+      document.getElementById('formMandatory').checked = !!currentEditingCourse.mandatory;
+      document.getElementById('formThumbUrl').value = currentEditingCourse.thumbnailUrl || '';
+      selectedGradient = currentEditingCourse.gradientId || 'blue';
+      updateThumbPreview(currentEditingCourse.thumbnailUrl || '');
+    }
+
+    function updateThumbPreview(url) {
+      const box = document.getElementById('formThumbPreview');
+      const placeholder = document.getElementById('formThumbPlaceholder');
+      if (url && url.trim()) {
+        box.style.backgroundImage = `url(${url})`;
+        placeholder.style.display = 'none';
+      } else {
+        box.style.backgroundImage = GRADIENTS[selectedGradient] || GRADIENTS.blue;
+        placeholder.style.display = 'block';
+      }
+    }
+
+    function setGradientChoice(g) {
+      selectedGradient = g;
+      currentEditingCourse.gradientId = g;
+      document.getElementById('formThumbUrl').value = '';
+      currentEditingCourse.thumbnailUrl = '';
+      updateThumbPreview('');
+    }
+
+    // Bildeopplasting i editoren
+    async function handleImageUploadFile(e, target, mIdx, lIdx, bIdx) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const base64Data = ev.target.result;
+        try {
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: file.name, base64Data })
+          });
+          const data = await res.json();
+          if (data.success) {
+            if (target === 'thumb') {
+              document.getElementById('formThumbUrl').value = data.url;
+              currentEditingCourse.thumbnailUrl = data.url;
+              updateThumbPreview(data.url);
+            } else if (target === 'block') {
+              currentEditingCourse.modules[mIdx].lessons[lIdx].blocks[bIdx].content.url = data.url;
+              renderBuilderModules();
+            }
+          }
+        } catch (err) {
+          alert('Kunne ikke laste opp bilde');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Builder Modules & Lessons & Blocks
+    function renderBuilderModules() {
+      const container = document.getElementById('builderModulesList');
+      if (!currentEditingCourse || !currentEditingCourse.modules) return;
+
+      container.innerHTML = currentEditingCourse.modules.map((m, mIdx) => `
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem; flex:1;">
+              <span style="font-weight:bold; color:#64748B; font-size:0.85rem;">Modul ${mIdx+1}:</span>
+              <input type="text" value="${m.title}" oninput="currentEditingCourse.modules[${mIdx}].title = this.value" style="padding:0.4rem 0.65rem; border-radius:6px; border:1px solid #CBD5E1; font-weight:bold; flex:1; max-width:400px; font-size:0.9rem;">
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+              <button onclick="addBuilderLesson(${mIdx})" style="padding:0.35rem 0.75rem; background:#3B82F6; color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:0.78rem;">+ Leksjon</button>
+              <button onclick="removeBuilderModule(${mIdx})" style="background:none; border:none; color:#EF4444; font-weight:bold; cursor:pointer;">✕</button>
+            </div>
+          </div>
+
+          <!-- Leksjoner -->
+          <div style="display:flex; flex-direction:column; gap:0.75rem; padding-left:1rem; border-left:2px solid #E2E8F0;">
+            ${(m.lessons || []).map((l, lIdx) => `
+              <div style="background:white; border:1px solid #E2E8F0; border-radius:8px; padding:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                  <div style="display:flex; align-items:center; gap:0.5rem; flex:1;">
+                    <span style="font-size:0.78rem; font-weight:bold; color:#94A3B8;">Leksjon ${lIdx+1}:</span>
+                    <input type="text" value="${l.title}" oninput="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].title = this.value" style="padding:0.35rem 0.55rem; border-radius:4px; border:1px solid #CBD5E1; font-weight:bold; font-size:0.85rem; flex:1; max-width:350px;">
+                    <input type="text" value="${l.duration || '5 min'}" oninput="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].duration = this.value" style="width:70px; padding:0.35rem; border-radius:4px; border:1px solid #CBD5E1; font-size:0.78rem;">
+                  </div>
+                  <button onclick="removeBuilderLesson(${mIdx}, ${lIdx})" style="background:none; border:none; color:#EF4444; cursor:pointer;">✕</button>
+                </div>
+
+                <!-- Blokker -->
+                <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:0.75rem;">
+                  ${(l.blocks || []).map((b, bIdx) => renderBuilderBlock(mIdx, lIdx, b, bIdx)).join('')}
+                </div>
+
+                <!-- Legg til blokk meny -->
+                <div style="display:flex; gap:0.4rem; align-items:center; font-size:0.75rem; border-top:1px solid #F1F5F9; padding-top:0.5rem;">
+                  <span style="color:#94A3B8; font-weight:bold;">+ Legg til:</span>
+                  <button onclick="addBuilderBlock(${mIdx}, ${lIdx}, 'text')" style="background:#F1F5F9; border:1px solid #E2E8F0; padding:0.25rem 0.5rem; border-radius:4px; cursor:pointer; font-weight:600;">📝 Tekst</button>
+                  <button onclick="addBuilderBlock(${mIdx}, ${lIdx}, 'image')" style="background:#EFF6FF; border:1px solid #BFDBFE; color:#1D4ED8; padding:0.25rem 0.5rem; border-radius:4px; cursor:pointer; font-weight:bold;">🖼️ Bilde</button>
+                  <button onclick="addBuilderBlock(${mIdx}, ${lIdx}, 'quiz')" style="background:#FFFBEB; border:1px solid #FDE68A; color:#B45309; padding:0.25rem 0.5rem; border-radius:4px; cursor:pointer; font-weight:bold;">🧩 Quiz</button>
+                  <button onclick="addBuilderBlock(${mIdx}, ${lIdx}, 'video')" style="background:#F1F5F9; border:1px solid #E2E8F0; padding:0.25rem 0.5rem; border-radius:4px; cursor:pointer; font-weight:600;">🎥 Video</button>
+                </div>
+
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderBuilderBlock(mIdx, lIdx, b, bIdx) {
+      if (b.type === 'text') {
+        return `
+          <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px; padding:0.75rem;">
+            <div style="display:flex; justify-content:space-between; font-size:0.7rem; font-weight:bold; color:#64748B; margin-bottom:0.3rem;">
+              <span>📝 TEKSTBLOKK</span>
+              <button onclick="removeBuilderBlock(${mIdx}, ${lIdx}, ${bIdx})" style="border:none; background:none; color:#EF4444; cursor:pointer;">✕</button>
+            </div>
+            <textarea rows="3" oninput="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].blocks[${bIdx}].content.text = this.value" style="width:100%; padding:0.5rem; border-radius:4px; border:1px solid #CBD5E1; font-size:0.85rem;">${b.content.text || ''}</textarea>
+          </div>
+        `;
+      }
+
+      if (b.type === 'image') {
+        const url = b.content.url || '';
+        return `
+          <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:6px; padding:0.75rem; display:flex; flex-direction:column; gap:0.5rem;">
+            <div style="display:flex; justify-content:space-between; font-size:0.7rem; font-weight:bold; color:#1D4ED8;">
+              <span>🖼️ BILDEBLOKK</span>
+              <button onclick="removeBuilderBlock(${mIdx}, ${lIdx}, ${bIdx})" style="border:none; background:none; color:#EF4444; cursor:pointer;">✕</button>
+            </div>
+            
+            ${url ? `<div style="height:120px; border-radius:6px; overflow:hidden; background:#CBD5E1;"><img src="${url}" style="width:100%; height:100%; object-fit:cover;"></div>` : ''}
+
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <label style="padding:0.35rem 0.65rem; background:white; border:1px solid #CBD5E1; border-radius:4px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
+                <i class="fa-solid fa-folder-open text-blue-600"></i> Velg bildefil fra Mac
+                <input type="file" onchange="handleImageUploadFile(event, 'block', ${mIdx}, ${lIdx}, ${bIdx})" accept="image/*" style="display:none;">
+              </label>
+              <input type="text" value="${url}" oninput="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].blocks[${bIdx}].content.url = this.value; renderBuilderModules();" placeholder="Eller lim inn bilde-URL..." style="flex:1; padding:0.35rem; border-radius:4px; border:1px solid #CBD5E1; font-size:0.8rem;">
+            </div>
+
+            <input type="text" value="${b.content.caption || ''}" oninput="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].blocks[${bIdx}].content.caption = this.value" placeholder="Bildetekst / bildetekst under bildet..." style="width:100%; padding:0.35rem; border-radius:4px; border:1px solid #CBD5E1; font-size:0.78rem;">
+          </div>
+        `;
+      }
+
+      if (b.type === 'quiz') {
+        const q = b.content.question || '';
+        const opts = b.content.options || ['Alt A', 'Alt B', 'Alt C'];
+        const ans = b.content.answer !== undefined ? b.content.answer : 0;
+        return `
+          <div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:0.75rem; display:flex; flex-direction:column; gap:0.5rem;">
+            <div style="display:flex; justify-content:space-between; font-size:0.7rem; font-weight:bold; color:#B45309;">
+              <span>🧩 QUIZBLOKK</span>
+              <button onclick="removeBuilderBlock(${mIdx}, ${lIdx}, ${bIdx})" style="border:none; background:none; color:#EF4444; cursor:pointer;">✕</button>
+            </div>
+            <input type="text" value="${q}" oninput="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].blocks[${bIdx}].content.question = this.value" placeholder="Spørsmål..." style="width:100%; padding:0.4rem; border-radius:4px; border:1px solid #FCD34D; font-weight:bold; font-size:0.85rem;">
+            <div style="display:flex; flex-direction:column; gap:0.3rem;">
+              ${opts.map((opt, oi) => `
+                <div style="display:flex; align-items:center; gap:0.4rem;">
+                  <input type="radio" name="rb_${mIdx}_${lIdx}_${bIdx}" ${ans === oi ? 'checked' : ''} onchange="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].blocks[${bIdx}].content.answer = ${oi}">
+                  <input type="text" value="${opt}" oninput="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].blocks[${bIdx}].content.options[${oi}] = this.value" style="flex:1; padding:0.3rem; border-radius:4px; border:1px solid #E2E8F0; font-size:0.8rem;">
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (b.type === 'video') {
+        return `
+          <div style="background:#F1F5F9; border:1px solid #CBD5E1; border-radius:6px; padding:0.75rem;">
+            <div style="display:flex; justify-content:space-between; font-size:0.7rem; font-weight:bold; color:#475569; margin-bottom:0.3rem;">
+              <span>🎥 VIDEOBLOKK</span>
+              <button onclick="removeBuilderBlock(${mIdx}, ${lIdx}, ${bIdx})" style="border:none; background:none; color:#EF4444; cursor:pointer;">✕</button>
+            </div>
+            <input type="text" value="${b.content.url || ''}" oninput="currentEditingCourse.modules[${mIdx}].lessons[${lIdx}].blocks[${bIdx}].content.url = this.value" placeholder="YouTube eller MP4 URL..." style="width:100%; padding:0.4rem; border-radius:4px; border:1px solid #CBD5E1; font-size:0.8rem;">
+          </div>
+        `;
+      }
+
+      return `<div>Blokk: ${b.type}</div>`;
+    }
+
+    function addBuilderModule() {
+      currentEditingCourse.modules.push({
+        id: Date.now(),
+        title: `Modul ${currentEditingCourse.modules.length + 1}: Ny modul`,
+        lessons: []
+      });
+      renderBuilderModules();
+    }
+
+    function removeBuilderModule(mIdx) {
+      currentEditingCourse.modules.splice(mIdx, 1);
+      renderBuilderModules();
+    }
+
+    function addBuilderLesson(mIdx) {
+      currentEditingCourse.modules[mIdx].lessons.push({
+        id: Date.now(),
+        title: 'Ny leksjon',
+        duration: '5 min',
+        blocks: [{ id: 'b-' + Date.now(), type: 'text', content: { text: '' } }]
+      });
+      renderBuilderModules();
+    }
+
+    function removeBuilderLesson(mIdx, lIdx) {
+      currentEditingCourse.modules[mIdx].lessons.splice(lIdx, 1);
+      renderBuilderModules();
+    }
+
+    function addBuilderBlock(mIdx, lIdx, type) {
+      let content = {};
+      if (type === 'text') content = { text: '' };
+      if (type === 'image') content = { url: '', caption: '' };
+      if (type === 'quiz') content = { question: 'Spørsmål?', options: ['Svar A', 'Svar B', 'Svar C'], answer: 0 };
+      if (type === 'video') content = { url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' };
+
+      currentEditingCourse.modules[mIdx].lessons[lIdx].blocks.push({
+        id: 'b-' + Date.now(),
+        type,
+        content
+      });
+      renderBuilderModules();
+    }
+
+    function removeBuilderBlock(mIdx, lIdx, bIdx) {
+      currentEditingCourse.modules[mIdx].lessons[lIdx].blocks.splice(bIdx, 1);
+      renderBuilderModules();
+    }
+
+    async function saveCourseFromBuilder(status) {
+      if (!currentEditingCourse) return;
+      currentEditingCourse.title = document.getElementById('formTitle').value.trim();
+      currentEditingCourse.description = document.getElementById('formDesc').value.trim();
+      currentEditingCourse.validityMonths = parseInt(document.getElementById('formValidity').value, 10) || 12;
+      currentEditingCourse.dueDate = document.getElementById('formDueDate').value;
+      currentEditingCourse.mandatory = document.getElementById('formMandatory').checked;
+      currentEditingCourse.thumbnailUrl = document.getElementById('formThumbUrl').value.trim();
+      currentEditingCourse.status = status;
+
+      if (!currentEditingCourse.title) {
+        alert('Kurstittel er påkrevd!');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/courses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(currentEditingCourse)
+        });
+        const data = await res.json();
+        if (data.success) {
+          closeCourseBuilder();
+          await fetchCourses();
+        }
+      } catch (err) {
+        alert('Kunne ikke lagre kurs');
+      }
+    }
+
+    // =========================================================================
+    // COURSE PLAYER (FORHÅNDSVISNING FOR ANSATTE MED BILDER)
+    // =========================================================================
+    function launchCourseInPlayer(id) {
+      const found = allCourses.find(c => c.id === id);
+      if (!found) return;
+      activePlayerCourse = found;
+      activePlayerLessonIdx = 0;
+      completedPlayerLessonIds = [];
+      activeQuizAnswers = {};
+      openPlayerModal();
+    }
+
+    function previewCurrentInPlayer() {
+      if (!currentEditingCourse) return;
+      activePlayerCourse = currentEditingCourse;
+      activePlayerLessonIdx = 0;
+      completedPlayerLessonIds = [];
+      activeQuizAnswers = {};
+      openPlayerModal();
+    }
+
+    function openPlayerModal() {
+      document.getElementById('playerHeadingCourse').innerText = activePlayerCourse.title;
+      renderPlayerSidebarAndLesson();
+      document.getElementById('coursePlayerModal').style.display = 'flex';
+    }
+
+    function closeCoursePlayer() {
+      document.getElementById('coursePlayerModal').style.display = 'none';
+      activePlayerCourse = null;
+    }
+
+    function getPlayerFlatLessons() {
+      if (!activePlayerCourse || !activePlayerCourse.modules) return [];
+      const res = [];
+      activePlayerCourse.modules.forEach((m, mIdx) => {
+        (m.lessons || []).forEach((l, lIdx) => {
+          res.push({ ...l, moduleTitle: m.title, mIdx, lIdx });
+        });
+      });
+      return res;
+    }
+
+    function renderPlayerSidebarAndLesson() {
+      const flat = getPlayerFlatLessons();
+      if (flat.length === 0) {
+        document.getElementById('playerLessonTitle').innerText = 'Ingen leksjoner i kurset';
+        document.getElementById('playerBlocksList').innerHTML = '';
+        return;
+      }
+
+      // Sidebar
+      const navContainer = document.getElementById('playerLessonsNav');
+      navContainer.innerHTML = (activePlayerCourse.modules || []).map((m, mIdx) => `
+        <div>
+          <div style="font-size:0.85rem; font-weight:bold; color:#1E293B; margin-bottom:0.4rem;">${m.title}</div>
+          <div style="display:flex; flex-direction:column; gap:0.25rem;">
+            ${(m.lessons || []).map((l, lIdx) => {
+              const flatIdx = flat.findIndex(x => x.id === l.id);
+              const isActive = flatIdx === activePlayerLessonIdx;
+              const isDone = completedPlayerLessonIds.includes(l.id);
+
+              return `
+                <button onclick="jumpPlayerLesson(${flatIdx})" style="width:100%; text-align:left; padding:0.5rem 0.75rem; border-radius:6px; border:none; cursor:pointer; font-size:0.8rem; font-weight:600; background:${isActive ? '#3B82F6' : 'transparent'}; color:${isActive ? 'white' : isDone ? '#10B981' : '#64748B'}; display:flex; justify-content:space-between; align-items:center;">
+                  <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${l.title}</span>
+                  ${isDone ? '<span>✓</span>' : ''}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `).join('');
+
+      // Lesson Content
+      const current = flat[activePlayerLessonIdx];
+      document.getElementById('playerLessonMeta').innerText = `${current.moduleTitle} • Leksjon ${current.lIdx + 1} (${current.duration || '5 min'})`;
+      document.getElementById('playerLessonTitle').innerText = current.title;
+
+      // Render Blocks (med STØTTE FOR BILDER!)
+      const blocksContainer = document.getElementById('playerBlocksList');
+      blocksContainer.innerHTML = (current.blocks || []).map(b => {
+        if (b.type === 'text') {
+          return `<div style="color:#374151; line-height:1.7; font-size:1.05rem; white-space:pre-wrap;">${b.content.text || ''}</div>`;
+        }
+
+        if (b.type === 'image') {
+          return `
+            <div style="margin:1.5rem 0; border-radius:12px; overflow:hidden; border:1px solid #E2E8F0; background:#F8FAFC; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+              <img src="${b.content.url}" alt="${b.content.caption || 'Leksjonsbilde'}" style="width:100%; max-height:420px; object-fit:cover;">
+              ${b.content.caption ? `<div style="padding:0.75rem 1rem; font-size:0.85rem; color:#64748B; font-weight:500; text-align:center; border-top:1px solid #E2E8F0; background:white;">${b.content.caption}</div>` : ''}
+            </div>
+          `;
+        }
+
+        if (b.type === 'quiz') {
+          const q = b.content.question;
+          const opts = b.content.options || [];
+          const ans = activeQuizAnswers[b.id];
+          const isSubmitted = ans !== undefined;
+          const isCorrect = ans === b.content.answer;
+
+          return `
+            <div style="background:white; border-radius:12px; padding:2rem; margin:2rem 0; border:2px solid #E2E8F0; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+              <div style="font-size:0.85rem; font-weight:bold; color:#F59E0B; margin-bottom:1rem;">🧩 QUIZ</div>
+              <h3 style="font-size:1.25rem; color:#1E293B; margin-bottom:1.5rem;">${q}</h3>
+              <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                ${opts.map((opt, oi) => `
+                  <button onclick="handlePlayerQuizAnswer('${b.id}', ${oi}, ${b.content.answer})" style="width:100%; text-align:left; padding:1rem 1.25rem; border-radius:8px; cursor:pointer; border:2px solid ${ans === oi ? (oi === b.content.answer ? '#10B981' : '#EF4444') : '#E2E8F0'}; background:${ans === oi ? (oi === b.content.answer ? '#ECFDF5' : '#FEF2F2') : 'white'}; font-weight:500; font-size:0.95rem;">
+                    ${opt}
+                  </button>
+                `).join('')}
+              </div>
+              ${isSubmitted ? `
+                <div style="margin-top:1.5rem; padding:1rem; border-radius:8px; font-weight:bold; font-size:0.9rem; background:${isCorrect ? '#ECFDF5' : '#FEF2F2'}; color:${isCorrect ? '#065F46' : '#991B1B'};">
+                  ${isCorrect ? '✅ Riktig svar!' : '❌ Feil svar, prøv igjen!'}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
+
+        if (b.type === 'video') {
+          return `
+            <div style="background:#0F172A; border-radius:12px; aspect-ratio:16/9; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem; margin:2rem 0; color:white;">
+              <div style="font-size:3rem;">▶️</div>
+              <div style="font-weight:bold;">Videoavspiller</div>
+              <div style="color:#94A3B8; font-size:0.85rem;">${b.content.url || ''}</div>
+            </div>
+          `;
+        }
+
+        return `<div>Innhold: ${b.type}</div>`;
+      }).join('');
+
+      // Progress bar update
+      const total = flat.length;
+      const doneCount = completedPlayerLessonIds.length;
+      const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+      document.getElementById('playerProgressPct').innerText = `${pct}% fullført`;
+      document.getElementById('playerProgressFill').style.width = `${pct}%`;
+    }
+
+    function handlePlayerQuizAnswer(bId, chosen, correct) {
+      activeQuizAnswers[bId] = chosen;
+      renderPlayerSidebarAndLesson();
+    }
+
+    function advancePlayerNextLesson() {
+      const flat = getPlayerFlatLessons();
+      const current = flat[activePlayerLessonIdx];
+      if (current && !completedPlayerLessonIds.includes(current.id)) {
+        completedPlayerLessonIds.push(current.id);
+      }
+
+      if (activePlayerLessonIdx < flat.length - 1) {
+        activePlayerLessonIdx++;
+        renderPlayerSidebarAndLesson();
+      } else {
+        alert('🎉 Gratulerer! Du har fullført hele kurset!');
+      }
+    }
+
+    function jumpPlayerLesson(idx) {
+      activePlayerLessonIdx = idx;
+      renderPlayerSidebarAndLesson();
+    }
+
+    // =========================================================================
+    // OPENAI MODAL & KURSGENERERING
+    // =========================================================================
+    function openOpenAiModal() {
+      const saved = localStorage.getItem('hb_openai_key') || '';
+      document.getElementById('openAiKey').value = saved;
+      document.getElementById('openAiModal').style.display = 'flex';
+    }
+
+    function closeOpenAiModal() {
+      document.getElementById('openAiModal').style.display = 'none';
+    }
+
+    async function generateCourseWithAi() {
+      const apiKey = document.getElementById('openAiKey').value.trim();
+      const topic = document.getElementById('aiCourseTopic').value.trim();
+      const company = document.getElementById('aiCourseCompany').value;
+
+      if (!topic) {
+        alert('Vennligst oppgi et kurstema');
+        return;
+      }
+
+      if (apiKey) localStorage.setItem('hb_openai_key', apiKey);
+
+      const btn = document.getElementById('btnSubmitAi');
+      btn.innerText = 'Genererer kurs... ⏳';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/ai/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey, topic, company })
+        });
+        const data = await res.json();
+        if (data.success && data.course) {
+          closeOpenAiModal();
+          currentEditingCourse = {
+            id: Date.now(),
+            title: data.course.title,
+            description: data.course.description,
+            mandatory: true,
+            companies: [company],
+            units: [],
+            dueDate: '',
+            validityMonths: 12,
+            status: 'Aktiv',
+            thumbnailUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=60',
+            tags: data.course.tags || ['Fagkurs'],
+            modules: data.course.modules || []
+          };
+          populateBuilderForm();
+          document.getElementById('builderHeading').innerText = `✨ AI: ${currentEditingCourse.title}`;
+          document.getElementById('courseBuilderModal').style.display = 'block';
+          setBuilderTab(2); // Åpne rett på leksjonene så dere ser innholdet med en gang!
+        }
+      } catch (e) {
+        alert('Feil under generering av kurs');
+      } finally {
+        btn.innerText = 'Generer kurs nå ✨';
+        btn.disabled = false;
+      }
+    }
+
+    // Backup download
+    function downloadBackup() {
+      window.location.href = '/api/export';
+    }
+
+    // Oppstart
+    fetchCourses();
+  </script>
+</body>
+</html>

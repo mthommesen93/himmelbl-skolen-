@@ -1,0 +1,157 @@
+[
+  {
+    "id": 1,
+    "title": "Medisinkurs (Legemiddelhåndtering)",
+    "description": "Grunnleggende opplæring i trygg legemiddelhåndtering for ansatte i Himmelblå.",
+    "mandatory": true,
+    "companies": ["Helse og omsorg", "Barnevern"],
+    "units": ["Høyås", "Hynivegen 1", "Hynivegen 2", "Hynivegen 94", "Lågendalen"],
+    "dueDate": "2026-10-01",
+    "validityMonths": 12,
+    "status": "Aktiv",
+    "createdBy": "Mari HR",
+    "createdAt": "2026-09-01",
+    "gradientId": "blue",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=60",
+    "tags": ["Legemiddel", "HMS"],
+    "modules": [
+      {
+        "id": 1,
+        "title": "Modul 1: Introduksjon & Rutiner",
+        "lessons": [
+          {
+            "id": 1,
+            "title": "Hva er legemidler og forsvarlig utdeling?",
+            "duration": "5 min",
+            "blocks": [
+              {
+                "id": "b1",
+                "type": "text",
+                "content": {
+                  "text": "Velkommen til legemiddelhåndtering i Himmelblå! Riktig medisinering redder liv og sikrer trygghet for våre beboere.\n\nHovedprinsippet er de 5 R-er:\n1. Riktig pasient\n2. Riktig legemiddel\n3. Riktig dose\n4. Riktig måte (administrasjonsform)\n5. Riktig tidspunkt"
+                }
+              },
+              {
+                "id": "b-img1",
+                "type": "image",
+                "content": {
+                  "url": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=60",
+                  "caption": "Sjekk alltid medikamentkortet mot dosetten før utdeling."
+                }
+              },
+              {
+                "id": "b2",
+                "type": "video",
+                "content": {
+                  "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                }
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Quiz: Grunnleggende begreper",
+            "duration": "3 min",
+            "blocks": [
+              {
+                "id": "b3",
+                "type": "quiz",
+                "content": {
+                  "question": "Hvem har ansvaret for å dobbeltsjekke at riktig dose gis til riktig bruker?",
+                  "options": [
+                    "Kun avdelingsleder",
+                    "Den ansatte som deler ut medisinen",
+                    "Apoteket som leverte pakken",
+                    "Beboeren selv"
+                  ],
+                  "answer": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Modul 2: Dobbeltsjekk og avvik",
+        "lessons": [
+          {
+            "id": 3,
+            "title": "Dobbeltsjekk-rutinen ved avvik",
+            "duration": "6 min",
+            "blocks": [
+              {
+                "id": "b4",
+                "type": "chat",
+                "content": {
+                  "messages": [
+                    { "role": "Kollega Hilde", "text": "Hei, jeg ser en uklar dosering på medikamentkortet her. Hva gjør vi?" },
+                    { "role": "Deg", "text": "Vi gir aldri medisin ved tvil! Vi ringer ansvarlig lege eller vakthavende sykepleier umiddelbart for verifisering." }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "completions": []
+  },
+  {
+    "id": 2,
+    "title": "Verge- og tvangskurs",
+    "description": "Innføring i regelverket rundt rettigheter, makt og tvang i barnevern og omsorg.",
+    "mandatory": true,
+    "companies": ["Barnevern", "Fosterhjem"],
+    "units": ["Høyås", "Bakkane", "Borgestad"],
+    "dueDate": "2026-11-01",
+    "validityMonths": 24,
+    "status": "Aktiv",
+    "createdBy": "Mari HR",
+    "createdAt": "2026-08-15",
+    "gradientId": "purple",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1450133064473-71024230f91b?w=800&auto=format&fit=crop&q=60",
+    "tags": ["Tvang & makt", "Lovverk", "Faglig"],
+    "modules": [
+      {
+        "id": 10,
+        "title": "Modul 1: Lovverket og etiske rammer",
+        "lessons": [
+          {
+            "id": 11,
+            "title": "Prinsippet om minste inngrep",
+            "duration": "8 min",
+            "blocks": [
+              {
+                "id": "b10",
+                "type": "text",
+                "content": {
+                  "text": "Bruk av tvang skal alltid være absolutt siste utvei. Skadeavverging krever grundig protokollføring og veiledning i etterkant."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "completions": []
+  },
+  {
+    "id": 3,
+    "title": "Brannvernopplæring 2026",
+    "description": "Obligatorisk opplæring i brannvern, rømningsveier og slukkeutstyr for alle ansatte.",
+    "mandatory": true,
+    "companies": ["Alle selskap"],
+    "units": [],
+    "dueDate": "2026-12-31",
+    "validityMonths": 12,
+    "status": "Aktiv",
+    "createdBy": "Mari HR",
+    "createdAt": "2026-09-10",
+    "gradientId": "red",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1542385151-efd9000785a0?w=800&auto=format&fit=crop&q=60",
+    "tags": ["Brann", "HMS", "Onboarding"],
+    "modules": [],
+    "completions": []
+  }
+]

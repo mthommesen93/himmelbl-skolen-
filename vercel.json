@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/courses", "destination": "/api/courses" },
+    { "source": "/api/ai/generate", "destination": "/api/generate" },
+    { "source": "/(.*)", "destination": "/public/$1" }
+  ]
+}
