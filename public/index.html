@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Himmelblå Skolen</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -56,6 +57,10 @@
 
       <button onclick="downloadBackup()" style="background: rgba(255,255,255,0.15); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.75rem;">
         💾 Backup
+      </button>
+
+      <button id="btnSupabaseStatus" onclick="openSupabaseConnectModal()" style="background: rgba(16,185,129,0.15); border: 1px solid #10B981; color: #34D399; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; gap: 0.35rem;">
+        <i class="fa-solid fa-database"></i> <span id="supabaseStatusText">Koble til Supabase</span>
       </button>
     </div>
   </div>
@@ -458,9 +463,45 @@
         </button>
       </div>
 
+  <!-- ========================================================================= -->
+  <!-- SUPABASE TILKOBLINGS-MODAL                                                -->
+  <!-- ========================================================================= -->
+  <div id="supabaseConnectModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 120; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: white; border-radius: 20px; max-width: 520px; width: 100%; padding: 1.75rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 1rem;">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: bold; color: #1E293B; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fa-solid fa-database text-emerald-600"></i> Koble til Supabase (Delt sky-database)
+        </h3>
+        <button onclick="closeSupabaseConnectModal()" style="background: none; border: none; font-size: 1.1rem; cursor: pointer; color: #94A3B8;">✕</button>
+      </div>
+
+      <p style="font-size: 0.8rem; color: #64748B; margin: 0; line-height: 1.5;">
+        Med Supabase tilkoblet lagres alle kurs direkte i skyen. Da kan både du og Marius se og redigere de samme kursene i sanntid!
+      </p>
+
+      <div>
+        <label style="display: block; font-size: 0.75rem; font-weight: bold; color: #475569; margin-bottom: 0.25rem;">Supabase Project URL:</label>
+        <input id="sbUrlInput" value="https://alunpuaerrblcmnhutnm.supabase.co" readonly style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.85rem; background: #F8FAFC; color: #047857; font-weight: 600;">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.75rem; font-weight: bold; color: #475569; margin-bottom: 0.25rem;">Supabase anon public key (JWT):</label>
+        <input type="password" id="sbAnonKeyInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.85rem;">
+        <span style="font-size: 0.7rem; color: #64748B; display: block; margin-top: 0.25rem;">
+          💡 Finnes under <strong>Project Settings ➔ API ➔ Project API keys</strong> (den som heter <code>anon</code> / <code>public</code>).
+        </span>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+        <button onclick="closeSupabaseConnectModal()" style="flex: 1; padding: 0.65rem; border-radius: 6px; border: 1px solid #CBD5E1; background: white; font-weight: 600; cursor: pointer;">Avbryt</button>
+        <button onclick="saveSupabaseCredentials()" style="flex: 1.5; padding: 0.65rem; border-radius: 6px; border: none; background: #10B981; color: white; font-weight: bold; cursor: pointer;">
+          Koble til & Synkroniser ✨
+        </button>
+      </div>
+
     </div>
   </div>
-
 
   <!-- JAVASCRIPT LOGIKK -->
   <script>
@@ -475,6 +516,61 @@
       red:    'linear-gradient(135deg,#EF4444,#B91C1C)',
       dark:   'linear-gradient(135deg,#334155,#0F172A)',
     };
+
+    const SUPABASE_PROJECT_URL = 'https://alunpuaerrblcmnhutnm.supabase.co';
+    let sbClient = null;
+
+    function getSupabaseClient() {
+      const savedKey = localStorage.getItem('hb_supabase_key');
+      if (savedKey && window.supabase) {
+        if (!sbClient) {
+          try {
+            sbClient = window.supabase.createClient(SUPABASE_PROJECT_URL, savedKey);
+          } catch(e) { console.error(e); }
+        }
+        return sbClient;
+      }
+      return null;
+    }
+
+    function openSupabaseConnectModal() {
+      document.getElementById('sbAnonKeyInput').value = localStorage.getItem('hb_supabase_key') || '';
+      document.getElementById('supabaseConnectModal').style.display = 'flex';
+    }
+
+    function closeSupabaseConnectModal() {
+      document.getElementById('supabaseConnectModal').style.display = 'none';
+    }
+
+    async function saveSupabaseCredentials() {
+      const key = document.getElementById('sbAnonKeyInput').value.trim();
+      if (!key) {
+        alert('Vennligst oppgi din anon key');
+        return;
+      }
+      localStorage.setItem('hb_supabase_key', key);
+      sbClient = null;
+      updateSupabaseStatusUi();
+      closeSupabaseConnectModal();
+      await fetchCourses();
+      alert('✅ Tilkoblet Supabase! Kursene synkroniseres nå i skyen.');
+    }
+
+    function updateSupabaseStatusUi() {
+      const key = localStorage.getItem('hb_supabase_key');
+      const txt = document.getElementById('supabaseStatusText');
+      const btn = document.getElementById('btnSupabaseStatus');
+      if (!txt || !btn) return;
+      if (key) {
+        txt.innerText = 'Supabase Tilkoblet ✅';
+        btn.style.background = 'rgba(16,185,129,0.3)';
+        btn.style.color = '#10B981';
+      } else {
+        txt.innerText = 'Koble til Supabase';
+        btn.style.background = 'rgba(16,185,129,0.15)';
+        btn.style.color = '#34D399';
+      }
+    }
 
     let allCourses = [];
     let currentRole = 'employee'; // 'employee' | 'admin'
@@ -496,8 +592,76 @@
       return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
     }
 
-    // 1. Last inn kurs fra backend
+    function courseToRow(c) {
+      return {
+        id: c.id,
+        title: c.title,
+        description: c.description || '',
+        mandatory: !!c.mandatory,
+        companies: c.companies || [],
+        units: c.units || [],
+        due_date: c.dueDate || c.due_date || '',
+        validity_months: c.validityMonths || c.validity_months || 12,
+        status: c.status || 'Aktiv',
+        created_by: c.createdBy || c.created_by || '',
+        created_at: c.createdAt || c.created_at || '',
+        gradient_id: c.gradientId || c.gradient_id || 'blue',
+        thumbnail_url: c.thumbnailUrl || c.thumbnail_url || '',
+        tags: c.tags || [],
+        modules: c.modules || [],
+        completions: c.completions || []
+      };
+    }
+
+    function rowToCourse(r) {
+      return {
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        mandatory: r.mandatory,
+        companies: r.companies || [],
+        units: r.units || [],
+        dueDate: r.due_date || r.dueDate || '',
+        validityMonths: r.validity_months || r.validityMonths || 12,
+        status: r.status || 'Aktiv',
+        createdBy: r.created_by || r.createdBy || '',
+        createdAt: r.created_at || r.createdAt || '',
+        gradientId: r.gradient_id || r.gradientId || 'blue',
+        thumbnailUrl: r.thumbnail_url || r.thumbnailUrl || '',
+        tags: r.tags || [],
+        modules: r.modules || [],
+        completions: r.completions || []
+      };
+    }
+
+    // 1. Last inn kurs fra Supabase (eller lokalt fallback)
     async function fetchCourses() {
+      updateSupabaseStatusUi();
+      const sb = getSupabaseClient();
+      if (sb) {
+        try {
+          const { data, error } = await sb.from('courses').select('*').order('id', { ascending: true });
+          if (!error && data && data.length > 0) {
+            allCourses = data.map(rowToCourse);
+            renderAllViews();
+            return;
+          } else if (!error && data && data.length === 0) {
+            // Hvis Supabase tabell er tom, synk over standardkursene
+            const res = await fetch('/api/courses');
+            const local = await res.json();
+            if (local && local.length > 0) {
+              const rows = local.map(courseToRow);
+              await sb.from('courses').upsert(rows);
+              allCourses = local;
+              renderAllViews();
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Supabase fetch failed, falling back to local API', e);
+        }
+      }
+
       try {
         const res = await fetch('/api/courses');
         allCourses = await res.json();
@@ -728,6 +892,7 @@
               </div>
               <div style="position:absolute; top:0.75rem; right:0.75rem; display:flex; gap:0.35rem;">
                 <button onclick="editCourseInBuilder(${c.id})" style="background:rgba(255,255,255,0.9); border:none; border-radius:6px; padding:0.3rem 0.6rem; cursor:pointer; font-size:0.75rem; font-weight:bold; color:#334155;">✏️ Rediger</button>
+                <button onclick="deleteCourse(${c.id})" style="background:rgba(255,255,255,0.9); border:none; border-radius:6px; padding:0.3rem 0.5rem; cursor:pointer; font-size:0.75rem; font-weight:bold; color:#EF4444;" title="Slett kurs">🗑️</button>
               </div>
               ${c.thumbnailUrl ? `<div style="color:white; font-weight:bold; font-size:1rem; text-shadow:0 1px 4px rgba(0,0,0,0.7);">${c.title}</div>` : ''}
             </div>
@@ -1111,6 +1276,28 @@
         return;
       }
 
+      // 1. Sjekk om Supabase er tilkoblet
+      const sb = getSupabaseClient();
+      if (sb) {
+        try {
+          const row = courseToRow(currentEditingCourse);
+          const { error } = await sb.from('courses').upsert(row);
+          if (error) {
+            console.error('Supabase upsert error:', error);
+            alert('Feil ved lagring til Supabase: ' + error.message);
+            return;
+          }
+          closeCourseBuilder();
+          await fetchCourses();
+          return;
+        } catch (e) {
+          console.error(e);
+          alert('Feil ved lagring til Supabase: ' + e.message);
+          return;
+        }
+      }
+
+      // 2. Lokal fallback
       try {
         const res = await fetch('/api/courses', {
           method: 'POST',
@@ -1125,6 +1312,29 @@
       } catch (err) {
         alert('Kunne ikke lagre kurs');
       }
+    }
+
+    async function deleteCourse(id) {
+      if (!confirm('Er du sikker på at du vil slette dette kurset?')) return;
+      const sb = getSupabaseClient();
+      if (sb) {
+        try {
+          const { error } = await sb.from('courses').delete().eq('id', id);
+          if (error) {
+            alert('Kunne ikke slette fra Supabase: ' + error.message);
+            return;
+          }
+          await fetchCourses();
+          return;
+        } catch (e) {
+          console.error(e);
+          alert('Feil ved sletting: ' + e.message);
+          return;
+        }
+      }
+      // Lokal fallback
+      allCourses = allCourses.filter(c => c.id !== id);
+      renderAllViews();
     }
 
     // =========================================================================
