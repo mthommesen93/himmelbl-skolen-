@@ -146,120 +146,28 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 5. OPENAI AI-GENERATOR (Ekte GPT-4o-mini med Maris nøkkel)
-  if (url.pathname === '/api/ai/generate' && req.method === 'POST') {
+  // 5. OPENAI AI-GENERATOR (kurs, leksjoner og caser)
+  if ((url.pathname === '/api/generate' || url.pathname === '/api/ai/generate') && req.method === 'POST') {
     try {
-      const { apiKey, prompt, topic, company } = await parseJsonBody(req);
-      const activeKey = (apiKey && apiKey.startsWith('sk-')) ? apiKey.trim() : DEFAULT_OPENAI_KEY;
-
-      const systemPrompt = `Du er en pedagogisk kursekspert for Himmelblå (en ledende norsk virksomhet innen barnevern, helse og omsorg, BPA og fosterhjem). 
-Lag et strukturert, profesjonelt og engasjerende kurs på norsk basert på brukerens emne og ønsker.
-Svaret MÅ KUN være ren JSON i følgende format, uten markdown code blocks eller introduksjonstekst:
-{
-  "title": "Kurstittel",
-  "description": "Kort introduksjon til kurset og læringsmål (2-3 setninger).",
-  "tags": ["Tag1", "Tag2"],
-  "modules": [
-    {
-      "id": 1,
-      "title": "Modul 1: Tittel",
-      "lessons": [
-        {
-          "id": 101,
-          "title": "Leksjonstittel",
-          "duration": "5 min",
-          "blocks": [
-            {
-              "id": "b1",
-              "type": "text",
-              "content": { "text": "Innholdsrik pedagogisk leksjonstekst med viktige prinsipper..." }
-            },
-            {
-              "id": "b2",
-              "type": "quiz",
-              "content": {
-                "question": "Quizspørsmål relatert til leksjonen?",
-                "options": ["Alternativ A", "Alternativ B", "Alternativ C", "Alternativ D"],
-                "answer": 1
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}`;
-
-      const userPrompt = `Lag et kurs om: "${topic || prompt}". Målgruppe og selskap: "${company || 'Ansatte i Himmelblå'}". Spesifikke ønsker: "${prompt || 'Faglig forankret og praktisk rettet'}". Generer 2-3 moduler med 2 leksjoner hver, inkludert pedagogisk tekst og quiz.`;
-
-      if (activeKey) {
-        try {
-          const openAiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${activeKey}`
-            },
-            body: JSON.stringify({
-              model: 'gpt-4o-mini',
-              messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt }
-              ],
-              temperature: 0.7,
-              response_format: { type: 'json_object' }
-            })
-          });
-
-          if (openAiRes.ok) {
-            const openAiData = await openAiRes.json();
-            const content = openAiData.choices[0].message.content;
-            const parsedCourse = JSON.parse(content);
-            
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true, course: parsedCourse, source: 'openai' }));
-            return;
-          } else {
-            const errText = await openAiRes.text();
-            console.error('OpenAI API feil:', errText);
-          }
-        } catch (apiErr) {
-          console.error('Feil mot OpenAI API:', apiErr);
-        }
-      }
-
-      // Intelligent innebygd fallback
-      const fallbackCourse = {
-        title: topic || "Nytt fagkurs for Himmelblå",
-        description: `Strukturert opplæring i ${topic || 'gjeldende rutiner'} for ${company || 'Himmelblå'}.`,
-        tags: [topic?.split(' ')[0] || "Fag", "Himmelblå", "HMS"],
-        modules: [
-          {
-            id: 1,
-            title: `Modul 1: Introduksjon til ${topic || 'faget'}`,
-            lessons: [
-              {
-                id: 101,
-                title: "Bakgrunn og formål",
-                duration: "5 min",
-                blocks: [
-                  {
-                    id: "b1",
-                    type: "text",
-                    content: { text: `Velkommen til kurset! I Himmelblå setter vi trygghet, verdighet og faglig kvalitet først innen ${topic || 'dette området'}.` }
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+      const body = await parseJsonBody(req);
+      if (!body.apiKey) body.apiKey = DEFAULT_OPENAI_KEY;
+      const fakeReq = { method: 'POST', body };
+      const fakeRes = {
+        setHeader: () => {},
+        status: (code) => ({
+          json: (data) => {
+            res.writeHead(code, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(data));
+          },
+          end: () => res.end()
+        })
       };
-
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, course: fallbackCourse, source: 'smart-template' }));
+      const { default: handler } = await import('./api/generate.js');
+      await handler(fakeReq, fakeRes);
     } catch (err) {
+      console.error('Genereringsfeil:', err);
       res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Kunne ikke generere kurs' }));
+      res.end(JSON.stringify({ error: err.message }));
     }
     return;
   }
