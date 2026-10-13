@@ -6,6 +6,7 @@
   <title>Himmelblå Skolen – Kursportal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -622,48 +623,143 @@
 
 
   <!-- ========================================================================= -->
-  <!-- MODAL: OPENAI ASSISTENT (FOR HELE KURS ELLER CASER)                       -->
+  <!-- MODAL: HIMMELBLÅ AI KURS-COPILOT & PDF-LESER                              -->
   <!-- ========================================================================= -->
-  <div id="openAiModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 110; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: white; border-radius: 20px; max-width: 580px; width: 100%; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 1.25rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #1E293B; display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fa-solid fa-wand-magic-sparkles text-purple-600"></i> AI Kursassistent (OpenAI)
-        </h3>
-        <button onclick="closeOpenAiModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #94A3B8;">✕</button>
+  <div id="openAiModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.65); backdrop-filter: blur(6px); z-index: 110; align-items: center; justify-content: center; padding: 1.5rem;">
+    <div style="background: white; border-radius: 20px; max-width: 1040px; width: 100%; height: 86vh; max-height: 850px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; overflow: hidden;">
+      
+      <!-- Modal Header -->
+      <div style="background: white; border-bottom: 1px solid #E2E8F0; padding: 1rem 1.75rem; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #9333EA, #3B82F6); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(147, 51, 234, 0.3);">
+            ✨
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #1E293B;">
+              Himmelblå AI Kursdesigner & PDF-leser
+            </h3>
+            <span style="font-size: 0.75rem; color: #64748B;">
+              Last opp PDF (prosedyrer/lovverk), still spørsmål, gi prompts og la AI skreddersy kurset for deg.
+            </span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="aiActiveDocBadge" style="display: none; background: #DCFCE7; color: #15803D; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 20px;">
+            📄 PDF aktiv
+          </span>
+          <button onclick="closeOpenAiModal()" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #94A3B8; font-weight: bold;">✕</button>
+        </div>
       </div>
 
-      <p style="font-size: 0.85rem; color: #64748B; margin: 0; line-height: 1.5;">
-        Beskriv temaet for kurset. OpenAI (GPT-4o-mini) lager en fullstendig pedagogisk kursstruktur med moduler, leksjoner og quizer tilpasset Himmelblå!
-      </p>
+      <!-- Modal Body (2 Kolonner) -->
+      <div style="flex: 1; display: flex; overflow: hidden;">
+        
+        <!-- Venstre kolonne: PDF Dokument & Rammer (bredde 330px) -->
+        <div style="width: 330px; background: #F8FAFC; border-right: 1px solid #E2E8F0; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto;">
+          
+          <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+            
+            <!-- PDF Opplasting -->
+            <div>
+              <label style="display: block; font-size: 0.8rem; font-weight: 800; color: #1E293B; margin-bottom: 0.4rem;">
+                📄 Fagdokument / PDF (Rutiner & Prosedyrer)
+              </label>
 
-      <div>
-        <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem;">Kurstema / Tittel:</label>
-        <input id="aiTopicInput" placeholder="F.eks. Deeskalering og konflikthåndtering i barnevern" style="width: 100%; padding: 0.6rem 0.85rem; border-radius: 8px; border: 1px solid #CBD5E1; font-size: 0.9rem;">
+              <!-- Dropzone -->
+              <div id="pdfDropZone" onclick="document.getElementById('pdfFileInput').click()" style="border: 2px dashed #CBD5E1; border-radius: 12px; padding: 1.25rem 1rem; text-align: center; cursor: pointer; background: white; transition: all 0.2s;">
+                <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">📑</div>
+                <div style="font-size: 0.82rem; font-weight: 800; color: #1E293B;">Last opp PDF fra Mac</div>
+                <div style="font-size: 0.7rem; color: #64748B; margin-top: 0.2rem;">Rutiner, fagprosedyrer, lovverk</div>
+              </div>
+              <input type="file" id="pdfFileInput" accept="application/pdf" onchange="handlePdfUpload(event)" style="display: none;">
+
+              <!-- Statusvisning for opplastet PDF -->
+              <div id="pdfFileInfo" style="display: none; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 10px; padding: 0.75rem 0.85rem; margin-top: 0.6rem; flex-direction: column; gap: 0.3rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.78rem; font-weight: 800; color: #15803D; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;" id="pdfFileNameLabel">
+                    fil.pdf
+                  </span>
+                  <button type="button" onclick="removeUploadedPdf()" style="background: none; border: none; color: #EF4444; font-size: 0.75rem; font-weight: bold; cursor: pointer;">✕</button>
+                </div>
+                <div id="pdfStatsLabel" style="font-size: 0.7rem; color: #166534; font-weight: 600;">0 sider • 0 ord lest av AI</div>
+              </div>
+
+              <div id="pdfUploadStatus" style="display: none; font-size: 0.75rem; color: #2563EB; font-weight: bold; margin-top: 0.4rem;"></div>
+            </div>
+
+            <!-- Kurstittel -->
+            <div>
+              <label style="display: block; font-size: 0.78rem; font-weight: 800; color: #1E293B; margin-bottom: 0.3rem;">Kurstittel / Emne:</label>
+              <input id="aiTopicInput" placeholder="F.eks. Legemiddelhåndtering eller Traumebevisst omsorg" style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #CBD5E1; font-size: 0.85rem; outline: none; background: white;">
+            </div>
+
+            <!-- Målgruppe / Selskap -->
+            <div>
+              <label style="display: block; font-size: 0.78rem; font-weight: 800; color: #1E293B; margin-bottom: 0.3rem;">Målgruppe / Selskap:</label>
+              <select id="aiCompanySelect" style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #CBD5E1; font-size: 0.85rem; background: white; outline: none;">
+                <option value="Barnevern">Barnevern</option>
+                <option value="Helse og omsorg">Helse og omsorg</option>
+                <option value="Fosterhjem">Fosterhjem</option>
+                <option value="BPA">BPA</option>
+                <option value="Alle selskaper i Himmelblå">Alle selskaper</option>
+              </select>
+            </div>
+
+            <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; padding: 0.75rem; font-size: 0.72rem; color: #1E40AF; line-height: 1.4;">
+              💡 <strong>Tips:</strong> Still AI-en spørsmål om innholdet i chatten for å utforske pensum, før du trykker «Bygg og overfør».
+            </div>
+
+          </div>
+
+          <div style="font-size: 0.7rem; color: #94A3B8; text-align: center; margin-top: 1rem;">
+            Drevet av OpenAI GPT-4o-mini
+          </div>
+
+        </div>
+
+        <!-- Høyre kolonne: Interaktiv Samtale & Bygging (flex: 1) -->
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem; background: white;">
+          
+          <!-- Meldingsliste -->
+          <div id="aiChatMessagesList" style="flex: 1; overflow-y: auto; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem; max-height: 480px;">
+            <!-- Fylles med samtale -->
+          </div>
+
+          <!-- Hurtig-prompts chips -->
+          <div style="padding-top: 0.75rem; border-top: 1px solid #F1F5F9; margin-top: 0.75rem;">
+            <div style="font-size: 0.72rem; font-weight: 800; color: #64748B; margin-bottom: 0.35rem;">Forslag til prompts:</div>
+            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+              <button type="button" onclick="sendQuickPrompt('Trekk ut de 3 viktigste rutinene fra PDF-en og forklar dem kort.')" style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 16px; padding: 0.25rem 0.65rem; font-size: 0.72rem; font-weight: 600; color: #334155; cursor: pointer;">💡 Trekk ut de 3 viktigste rutinene</button>
+              <button type="button" onclick="sendQuickPrompt('Fokuser ekstra på etiske dilemmaer og avvikshåndtering i kurset.')" style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 16px; padding: 0.25rem 0.65rem; font-size: 0.72rem; font-weight: 600; color: #334155; cursor: pointer;">💡 Fokuser på etiske dilemmaer</button>
+              <button type="button" onclick="sendQuickPrompt('Lag 3 moduler med 2 leksjoner hver, inkludert en quiz og en case i hver modul.')" style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 16px; padding: 0.25rem 0.65rem; font-size: 0.72rem; font-weight: 600; color: #334155; cursor: pointer;">💡 Lag 3 moduler med quiz & case</button>
+              <button type="button" onclick="sendQuickPrompt('Hva sier dokumentet om plikter ved akutte situasjoner?')" style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 16px; padding: 0.25rem 0.65rem; font-size: 0.72rem; font-weight: 600; color: #334155; cursor: pointer;">❓ Hva sier dokumentet om akutte situasjoner?</button>
+            </div>
+          </div>
+
+          <!-- Skrivefelt -->
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; align-items: center;">
+            <input id="aiChatInput" onkeydown="if(event.key==='Enter') sendAiChatMessage()" placeholder="Still et spørsmål til PDF-en eller skriv instrukser for kurset..." style="flex: 1; padding: 0.7rem 1rem; border-radius: 10px; border: 1px solid #CBD5E1; font-size: 0.88rem; outline: none;">
+            <button type="button" onclick="sendAiChatMessage()" style="padding: 0.7rem 1.25rem; background: #2563EB; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.35rem;">
+              <span>Send</span> ✈️
+            </button>
+          </div>
+
+          <!-- Bunnlinje: Bygg og overfør knapp -->
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" onclick="closeOpenAiModal()" style="padding: 0.6rem 1.25rem; background: white; border: 1px solid #CBD5E1; border-radius: 8px; font-weight: 700; color: #475569; font-size: 0.85rem; cursor: pointer;">
+              Avbryt
+            </button>
+            
+            <button id="btnBuildFromChat" type="button" onclick="buildCourseFromAiCoPilot()" style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #9333EA, #2563EB); color: white; border: none; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(147,51,234,0.3);">
+              🚀 Bygg og overfør kurset til Studio
+            </button>
+          </div>
+
+        </div>
+
       </div>
 
-      <div>
-        <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem;">Målgruppe / Selskap:</label>
-        <select id="aiCompanySelect" style="width: 100%; padding: 0.6rem 0.85rem; border-radius: 8px; border: 1px solid #CBD5E1; font-size: 0.9rem; background: white;">
-          <option value="Barnevern">Barnevern</option>
-          <option value="Helse og omsorg">Helse og omsorg</option>
-          <option value="Fosterhjem">Fosterhjem</option>
-          <option value="BPA">BPA</option>
-          <option value="Alle selskaper i Himmelblå">Alle selskaper</option>
-        </select>
-      </div>
-
-      <div>
-        <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem;">Spesielle ønsker eller fokusområder (valgfritt):</label>
-        <textarea id="aiPromptDetails" rows="2" placeholder="F.eks. Legg vekt på traumebevisst omsorg og kapittel 4A..." style="width: 100%; padding: 0.6rem 0.85rem; border-radius: 8px; border: 1px solid #CBD5E1; font-size: 0.85rem;"></textarea>
-      </div>
-
-      <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
-        <button onclick="closeOpenAiModal()" style="flex: 1; padding: 0.7rem; border-radius: 8px; border: 1px solid #CBD5E1; background: white; font-weight: 700; cursor: pointer;">Avbryt</button>
-        <button id="btnTriggerAiGen" onclick="triggerFullCourseAiGeneration()" style="flex: 1.5; padding: 0.7rem; border-radius: 8px; border: none; background: #9333EA; color: white; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
-          ✨ Generer kurs med AI
-        </button>
-      </div>
     </div>
   </div>
 
@@ -1728,38 +1824,210 @@
     }
 
     // =========================================================================
-    // AI GENERATORER: HELE KURS, ENKLETT CASER & LEKSJONSINNHOLD
+    // AI KURS-COPILOT: PDF-LESER, INTERAKTIV CHAT & PROMPTING
     // =========================================================================
+    let uploadedPdfText = '';
+    let uploadedPdfName = '';
+    let uploadedPdfPageCount = 0;
+    let aiChatMessages = [
+      {
+        role: 'assistant',
+        content: 'Hei Mari! Jeg er din AI-kursdesigner for Himmelblå.\n\nDu kan laste opp et fagdrev eller en prosedyre-PDF til venstre. Du kan også stille meg spørsmål om innholdet, eller be meg lage spesifikke moduler, leksjoner og caser. Hva slags kurs skal vi lage i dag?'
+      }
+    ];
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     function openOpenAiModal() {
       document.getElementById('openAiModal').style.display = 'flex';
+      renderAiChatMessages();
     }
+
     function closeOpenAiModal() {
       document.getElementById('openAiModal').style.display = 'none';
     }
 
-    async function triggerFullCourseAiGeneration() {
-      const topic = document.getElementById('aiTopicInput').value.trim();
-      const comp = document.getElementById('aiCompanySelect').value;
-      const details = document.getElementById('aiPromptDetails').value.trim();
-      const btn = document.getElementById('btnTriggerAiGen');
+    async function handlePdfUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
 
-      if (!topic) {
-        alert('Vennligst oppgi et kurstema');
-        return;
+      const statusEl = document.getElementById('pdfUploadStatus');
+      const infoEl = document.getElementById('pdfFileInfo');
+      const dropZone = document.getElementById('pdfDropZone');
+      statusEl.style.display = 'block';
+      statusEl.innerText = '⏳ Leser og analyserer PDF-sider...';
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        if (!window.pdfjsLib) {
+          throw new Error('PDF.js-biblioteket er ikke initialisert.');
+        }
+
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        
+        let fullText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageStr = textContent.items.map(it => it.str).join(' ');
+          fullText += `\n--- Side ${i} ---\n` + pageStr;
+        }
+
+        uploadedPdfText = fullText;
+        uploadedPdfName = file.name;
+        uploadedPdfPageCount = pdf.numPages;
+
+        const words = fullText.split(/\s+/).filter(Boolean).length;
+        statusEl.style.display = 'none';
+        infoEl.style.display = 'flex';
+        dropZone.style.display = 'none';
+        document.getElementById('pdfFileNameLabel').innerText = file.name;
+        document.getElementById('pdfStatsLabel').innerText = `${pdf.numPages} sider • ${words.toLocaleString('no-NO')} ord lest av AI ✅`;
+        
+        const badge = document.getElementById('aiActiveDocBadge');
+        if (badge) {
+          badge.style.display = 'inline-block';
+          badge.innerText = `📄 ${file.name} (${pdf.numPages} s)`;
+        }
+
+        // Sett forslag til tittel basert på filnavn hvis tomt
+        const titleInp = document.getElementById('aiTopicInput');
+        if (!titleInp.value) {
+          titleInp.value = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+        }
+
+        aiChatMessages.push({
+          role: 'assistant',
+          content: `Jeg har nå lest og analysert hele **${file.name}** (${pdf.numPages} sider, ${words} ord)! 📚\n\nNå kan du stille meg spørsmål om innholdet i dokumentet, be meg trekke ut nøkkelrutiner, eller gi meg instrukser om hvordan du ønsker kurset bygget. Klikk på «Bygg og overfør» når du er klar!`
+        });
+        renderAiChatMessages();
+
+      } catch (err) {
+        console.error('PDF feil:', err);
+        statusEl.innerText = '❌ Kunne ikke lese PDF: ' + err.message;
       }
+    }
 
-      btn.innerText = '⏳ Genererer kurs med AI...';
+    function removeUploadedPdf() {
+      uploadedPdfText = '';
+      uploadedPdfName = '';
+      uploadedPdfPageCount = 0;
+      document.getElementById('pdfFileInfo').style.display = 'none';
+      document.getElementById('pdfDropZone').style.display = 'block';
+      document.getElementById('pdfFileInput').value = '';
+      const badge = document.getElementById('aiActiveDocBadge');
+      if (badge) badge.style.display = 'none';
+    }
+
+    function renderAiChatMessages() {
+      const container = document.getElementById('aiChatMessagesList');
+      if (!container) return;
+
+      container.innerHTML = aiChatMessages.map(m => {
+        const isUser = m.role === 'user';
+        return `
+          <div style="display: flex; justify-content: ${isUser ? 'flex-end' : 'flex-start'};">
+            <div style="max-width: 82%; padding: 0.85rem 1.15rem; border-radius: 16px; font-size: 0.88rem; line-height: 1.5; ${
+              isUser 
+                ? 'background: #2563EB; color: white; border-bottom-right-radius: 4px;' 
+                : 'background: #F1F5F9; color: #1E293B; border-bottom-left-radius: 4px; border: 1px solid #E2E8F0;'
+            }">
+              <div style="font-weight: 800; font-size: 0.72rem; margin-bottom: 0.3rem; opacity: 0.75;">
+                ${isUser ? 'Deg' : '✨ Himmelblå AI'}
+              </div>
+              <div style="white-space: pre-wrap;">${escapeHtml(m.content)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendAiChatMessage() {
+      const inp = document.getElementById('aiChatInput');
+      const text = inp.value.trim();
+      if (!text) return;
+      inp.value = '';
+
+      aiChatMessages.push({ role: 'user', content: text });
+      renderAiChatMessages();
+
+      const typingId = 'typing-' + Date.now();
+      const container = document.getElementById('aiChatMessagesList');
+      container.innerHTML += `
+        <div id="${typingId}" style="display: flex; justify-content: flex-start;">
+          <div style="background: #F1F5F9; padding: 0.6rem 1rem; border-radius: 16px; font-size: 0.82rem; color: #64748B; border: 1px solid #E2E8F0;">
+            ✨ AI tenker og analyserer...
+          </div>
+        </div>
+      `;
+      container.scrollTop = container.scrollHeight;
+
+      try {
+        const comp = document.getElementById('aiCompanySelect').value;
+        const topic = document.getElementById('aiTopicInput').value.trim();
+
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mode: 'chat',
+            company: comp,
+            topic: topic,
+            documentText: uploadedPdfText,
+            messages: aiChatMessages
+          })
+        });
+
+        const data = await res.json();
+        document.getElementById(typingId)?.remove();
+
+        if (data.success && data.reply) {
+          aiChatMessages.push({ role: 'assistant', content: data.reply });
+        } else {
+          aiChatMessages.push({ role: 'assistant', content: 'Fikk dessverre ikke svar fra AI. Vennligst prøv igjen.' });
+        }
+        renderAiChatMessages();
+      } catch (err) {
+        document.getElementById(typingId)?.remove();
+        aiChatMessages.push({ role: 'assistant', content: 'Feil ved tilkobling: ' + err.message });
+        renderAiChatMessages();
+      }
+    }
+
+    function sendQuickPrompt(promptText) {
+      document.getElementById('aiChatInput').value = promptText;
+      sendAiChatMessage();
+    }
+
+    async function buildCourseFromAiCoPilot() {
+      const btn = document.getElementById('btnBuildFromChat');
       btn.disabled = true;
+      btn.innerText = '⏳ Bygger fullt kurs basert på samtale og PDF...';
+
+      const comp = document.getElementById('aiCompanySelect').value;
+      const topic = document.getElementById('aiTopicInput').value.trim() || (uploadedPdfName ? uploadedPdfName.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ') : 'Nytt fagkurs');
 
       try {
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            mode: 'build_from_chat',
             topic,
             company: comp,
-            prompt: details,
-            mode: 'course'
+            documentText: uploadedPdfText,
+            messages: aiChatMessages
           })
         });
 
@@ -1769,7 +2037,7 @@
           currentEditingCourse = {
             id: Date.now(),
             title: data.course.title || topic,
-            description: data.course.description || '',
+            description: data.course.description || `Fagkurs om ${topic} for ${comp}.`,
             mandatory: true,
             companies: [comp],
             units: [],
@@ -1781,17 +2049,21 @@
             tags: data.course.tags || ['Fagkurs', comp],
             modules: data.course.modules || []
           };
+          builderSelectedModuleIdx = 0;
+          builderSelectedLessonIdx = 0;
           populateBuilderForm();
           document.getElementById('builderHeading').innerText = `✨ AI: ${currentEditingCourse.title}`;
           document.getElementById('courseBuilderModal').style.display = 'block';
           setBuilderTab(2);
-          alert('✅ Kurset ble generert med moduler og leksjoner!');
+          alert(`✅ Kurset "${currentEditingCourse.title}" ble opprettet med ${(currentEditingCourse.modules || []).length} moduler og leksjoner!`);
+        } else {
+          alert('Kunne ikke bygge kurs: ' + (data.error || 'Ukjent feil'));
         }
       } catch (err) {
-        alert('Kunne ikke generere kurs med AI');
+        alert('Feil ved bygging av kurs: ' + err.message);
       } finally {
-        btn.innerText = '✨ Generer kurs med AI';
         btn.disabled = false;
+        btn.innerText = '🚀 Bygg og overfør kurset til Studio';
       }
     }
 
@@ -1800,7 +2072,11 @@
       const lIdx = builderSelectedLessonIdx;
       const lesson = currentEditingCourse.modules[mIdx].lessons[lIdx];
 
+      const promptWishes = prompt(`Hva ønsker du at leksjonen "${lesson.title}" skal handle om?\n(Eventuell opplastet PDF brukes automatisk i bakgrunnen)`, 'Fokuser på praktiske rutiner, etiske dilemmaer og gi gode eksempler.');
+      if (promptWishes === null) return;
+
       const btn = event.currentTarget;
+      const originalText = btn.innerText;
       btn.innerText = '⏳ Skriver innhold...';
 
       try {
@@ -1811,7 +2087,9 @@
             mode: 'lesson',
             courseTitle: currentEditingCourse.title,
             lessonTitle: lesson.title,
-            topic: currentEditingCourse.title
+            topic: currentEditingCourse.title,
+            prompt: promptWishes,
+            documentText: uploadedPdfText
           })
         });
 
@@ -1821,7 +2099,9 @@
           renderBuilderLessonWorkspace();
         }
       } catch (err) {
-        alert('Feil ved generering av leksjon');
+        alert('Feil ved generering av leksjon: ' + err.message);
+      } finally {
+        btn.innerText = originalText;
       }
     }
 
@@ -1829,6 +2109,9 @@
       const mIdx = builderSelectedModuleIdx;
       const lIdx = builderSelectedLessonIdx;
       const lesson = currentEditingCourse.modules[mIdx].lessons[lIdx];
+
+      const promptWishes = prompt(`Hva slags dilemma eller situasjon ønsker du for denne casen?\n(Trykk OK for standard case basert på tema og PDF)`, 'Dilemma om grensesetting, rettssikkerhet eller medisinnekt');
+      if (promptWishes === null) return;
 
       try {
         const res = await fetch('/api/generate', {
@@ -1838,7 +2121,9 @@
             mode: 'case',
             courseTitle: currentEditingCourse.title,
             lessonTitle: lesson.title,
-            topic: lesson.title
+            topic: lesson.title,
+            prompt: promptWishes,
+            documentText: uploadedPdfText
           })
         });
 
@@ -1846,10 +2131,10 @@
         if (data.success && data.caseData) {
           lesson.blocks[bIdx].content = data.caseData;
           renderBuilderLessonWorkspace();
-          alert('✅ Ny AI Case ble generert!');
+          alert('✅ Ny AI Case ble generert basert på fagstoffet!');
         }
       } catch (err) {
-        alert('Kunne ikke generere AI case');
+        alert('Kunne ikke generere AI case: ' + err.message);
       }
     }
 
