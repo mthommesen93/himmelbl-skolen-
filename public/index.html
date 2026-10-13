@@ -518,10 +518,11 @@
     };
 
     const SUPABASE_PROJECT_URL = 'https://alunpuaerrblcmnhutnm.supabase.co';
+    const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsdW5wdWFlcnJibGNtbmh1dG5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4NzkwOTMsImV4cCI6MjEwNzQ1NTA5M30.Z4HVJQylQlaS_vJsCJjKGVXEHAp2YyKz0CnGpA0jVrI';
     let sbClient = null;
 
     function getSupabaseClient() {
-      const savedKey = localStorage.getItem('hb_supabase_key');
+      const savedKey = localStorage.getItem('hb_supabase_key') || DEFAULT_SUPABASE_KEY;
       if (savedKey && window.supabase) {
         if (!sbClient) {
           try {
@@ -534,7 +535,7 @@
     }
 
     function openSupabaseConnectModal() {
-      document.getElementById('sbAnonKeyInput').value = localStorage.getItem('hb_supabase_key') || '';
+      document.getElementById('sbAnonKeyInput').value = localStorage.getItem('hb_supabase_key') || DEFAULT_SUPABASE_KEY;
       document.getElementById('supabaseConnectModal').style.display = 'flex';
     }
 
@@ -543,11 +544,7 @@
     }
 
     async function saveSupabaseCredentials() {
-      const key = document.getElementById('sbAnonKeyInput').value.trim();
-      if (!key) {
-        alert('Vennligst oppgi din anon key');
-        return;
-      }
+      const key = document.getElementById('sbAnonKeyInput').value.trim() || DEFAULT_SUPABASE_KEY;
       localStorage.setItem('hb_supabase_key', key);
       sbClient = null;
       updateSupabaseStatusUi();
@@ -557,13 +554,13 @@
     }
 
     function updateSupabaseStatusUi() {
-      const key = localStorage.getItem('hb_supabase_key');
+      const key = localStorage.getItem('hb_supabase_key') || DEFAULT_SUPABASE_KEY;
       const txt = document.getElementById('supabaseStatusText');
       const btn = document.getElementById('btnSupabaseStatus');
       if (!txt || !btn) return;
       if (key) {
-        txt.innerText = 'Supabase Tilkoblet ✅';
-        btn.style.background = 'rgba(16,185,129,0.3)';
+        txt.innerText = 'Sky-database Tilkoblet 🟢';
+        btn.style.background = 'rgba(16,185,129,0.25)';
         btn.style.color = '#10B981';
       } else {
         txt.innerText = 'Koble til Supabase';
